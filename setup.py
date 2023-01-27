@@ -1,0 +1,25 @@
+from setuptools import setup
+
+version = "0.2.1"
+
+setup(
+    name="wafermap-clustering",
+    version=version,
+    packages=["klarf_reader", "klarf_reader.models", "klarf_reader.readers"],
+    install_requires=[
+        "numpy",
+    ],
+    license="MIT",
+    author="Maxime MARTIN",
+    author_email="maxime.martin02@hotmail.fr",
+    description="A project to parse klarf file and get klarf content as dataclass",
+    url="https://github.com/Impro02/klarf_reader",
+    download_url="https://github.com/Impro02/klarf_reader/archive/refs/tags/%s.tar.gz"
+    % version,
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+    ],
+)
