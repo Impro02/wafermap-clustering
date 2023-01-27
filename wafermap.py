@@ -6,7 +6,6 @@ from sklearn.cluster import DBSCAN
 
 from klarf_reader.klarf import Klarf
 from wafermap_plot.wafermap import WaferMapPlot
-
 from models.cluseting_config import ClusteringConfig
 
 
