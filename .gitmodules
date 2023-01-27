@@ -1,0 +1,6 @@
+[submodule "wafermap-clustering"]
+	path = wafermap-clustering
+	url = https://github.com/Impro02/wafermap-plot.git
+[submodule "wafermap-plot"]
+	path = wafermap-plot
+	url = https://github.com/Impro02/klarf_reader.git
