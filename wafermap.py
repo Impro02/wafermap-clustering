@@ -55,7 +55,7 @@ for wafer in content.wafers:
             *[
                 DefectPoint(
                     defect_id=defect.id,
-                    point=(defect.point[0] / 1000, defect.point[1] / 1000),
+                    point=[point / 1000 for point in defect.point],
                     bin=cluster,
                 )
                 for defect in wafer.defects
