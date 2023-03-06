@@ -1,8 +1,14 @@
 {
     "attribute": "DYN_CLUSTER_ID",
+    "platforms": {
+        "windows": {
+            "input": "/clustering/tmp",
+            "output": "/clustering/output",
+            "error": "/clustering/error"
+        }
+    },
     "clustering": {
         "eps": 4,
         "min_samples": 3
     }
-    
 }

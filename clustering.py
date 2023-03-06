@@ -27,12 +27,9 @@ class Clustering:
     def apply(
         self,
         klarf_path: Path,
-        output_path: Path = None,
         baby_klarf: bool = False,
         show: bool = False,
-    ):
-
-        # path = Path("tests") / "assets" / "J247LFS_8625.000"
+    ) -> float:
 
         klarf_content = Klarf.load_from_file(filepath=klarf_path)
 
@@ -47,13 +44,9 @@ class Clustering:
                 ]
             )
 
-            print(f"defect_ids, defect_points computed in {time.time() - tic}s")
-
             clustering = DBSCAN(
                 eps=self.config.eps, min_samples=self.config.min_samples
             ).fit(defect_points)
-
-            print(f"clustering computed in {time.time() - tic}s")
 
             clustering_values, clusters = np.column_stack(
                 (np.array(defect_ids), clustering.labels_)
@@ -77,19 +70,15 @@ class Clustering:
                 point for cluster in clustered_defects.values() for point in cluster
             ]
 
-            print(f"clustered_defect_points computed in {time.time() - tic}s")
-
             if show:
                 self.wafermap.plot(defect_points=clustered_defect_points)
                 self.wafermap.show()
-
-                print(f"wafermap ploted in {time.time() - tic}s")
 
             if baby_klarf:
                 klarf_lib.write_clustered_baby_klarf(
                     klarf_content=klarf_content,
                     defect_points=clustered_defect_points,
-                    output_path=output_path,
+                    output_path=Path(self.config.output_path),
                 )
 
-                print(f"baby_klarf created in {time.time() - tic}s")
+            return time.time() - tic
