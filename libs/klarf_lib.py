@@ -6,13 +6,13 @@ from pathlib import Path
 # KLARF_READER
 from klarf_reader.models.klarf_content import KlarfContent
 
-# WAFERMAP_PLOT
-from wafermap_plot.models.defect_point import DefectPoint
+# MODELS
+from models.clustered_defect import ClusteredDefect
 
 
 def write_clustered_baby_klarf(
     klarf_content: KlarfContent,
-    defect_points: List[DefectPoint],
+    clustered_defects: List[ClusteredDefect],
     output_path: Path = None,
 ):
     if output_path is None:
@@ -40,7 +40,7 @@ def write_clustered_baby_klarf(
                 iter(
                     [
                         defect_point.bin
-                        for defect_point in defect_points
+                        for defect_point in clustered_defects
                         if defect_point.defect_id == defect.id
                     ]
                 )

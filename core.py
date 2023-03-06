@@ -49,8 +49,8 @@ def start():
                     timestamp = clustering.apply(
                         klarf_path=klarf_path,
                         baby_klarf=True,
-                        show=False,
                     )
+
                     if os.path.exists(klarf_path):
                         os.remove(klarf_path)
 
