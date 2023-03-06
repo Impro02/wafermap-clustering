@@ -23,10 +23,11 @@ def write_clustered_baby_klarf(
         / f"{klarf_content.lot_id}_{klarf_content.step_id}_{klarf_content.wafers[0].id}_clustered.000"
     )
 
-    with open(output_file, "w") as f:
-        defect_count = klarf_content.wafers[0].summary.number_of_defects
+    file_version = " ".join(str(klarf_content.file_version).split("."))
+    defect_count = klarf_content.wafers[0].summary.number_of_defects
 
-        f.write("FileVersion 1 2;\n")
+    with open(output_file, "w") as f:
+        f.write(f"FileVersion {file_version};\n")
         f.write(f"ResultTimestamp {klarf_content.result_timestamp};\n")
         f.write(f'LotID "{klarf_content.lot_id}";\n')
         f.write(f'DeviceID "{klarf_content.device_id}";\n')
