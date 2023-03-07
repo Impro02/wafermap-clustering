@@ -7,17 +7,19 @@ from pathlib import Path
 # MODELS
 from models.cluseting_config import ClusteringConfig
 
-#CLUSTERING
+# CLUSTERING
 from clustering import Clustering
+
+# UTILS
+from utils import mailing
 
 # CONFIGS
 from core import LOGGER
 
-class PipeLine():
 
+class PipeLine:
     def __init__(self, config: ClusteringConfig) -> None:
         self.config = config
-
 
     def start(self):
         clustering = Clustering(config=self.config)
@@ -37,7 +39,8 @@ class PipeLine():
 
             if not nbr_klarfs == 0:
                 for klarf_path in klarf_paths:
-                    klarf = str(klarf_path)
+                    klarf = os.path.basename(klarf_path)
+
                     try:
                         size = os.path.getsize(klarf_path)
 
@@ -68,7 +71,24 @@ class PipeLine():
                             ),
                         )
 
+                        message_error = f"{klarf=} processing failed, moved to {self.config.error_path}"
+
+                        html = f"""\
+                            <html>
+                                <body>
+                                    <p>{message_error}</p>
+                                </body>
+                            </html>
+                        """
+
+                        mailing.send_mail(
+                            sender="clustering.cro@st.com",
+                            receiver="FEM_DREAM_NOTIFICATIONS@list.st.com",
+                            subject=f"Clustering - Error on {klarf}",
+                            msg_html=html,
+                        )
+
                         LOGGER.critical(
-                            msg=f"{klarf=} processing failed, moved to {self.config.error_path}",
+                            msg=message_error,
                             exc_info=ex,
                         )

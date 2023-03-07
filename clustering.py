@@ -34,10 +34,10 @@ class Clustering:
         baby_klarf: bool = False,
     ) -> float:
 
-        klarf_content = Klarf.load_from_file(filepath=klarf_path)
-
         klarf_basename = os.path.basename(klarf_path)
         klarf_name, klarf_extension = os.path.splitext(klarf_basename)
+
+        klarf_content = Klarf.load_from_file(filepath=klarf_path)
 
         tic = time.time()
         for index, wafer in enumerate(klarf_content.wafers):
