@@ -10,5 +10,11 @@
     "clustering": {
         "eps": 4,
         "min_samples": 3
+    },
+    "mailing": {
+        "host": "c1mailhub0.cro.st.com",
+        "port": 25,
+        "sender": "clustering.cro@st.com",
+        "receiver": "FEM_DREAM_NOTIFICATIONS@list.st.com"
     }
 }

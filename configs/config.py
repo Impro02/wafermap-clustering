@@ -4,7 +4,7 @@ import platform
 from pathlib import Path
 
 # MODELS
-from models.cluseting_config import ClusteringConfig
+from models.config import Config, ClusteringConfig, MailingConfig, PathConfig
 
 
 def load_config(filepath: Path):
@@ -26,16 +26,21 @@ def load_config(filepath: Path):
         output_path = "/data/clustering/output"
         error_path = "/data/clustering/error"
 
-    return ClusteringConfig(
+    return Config(
         platform=platform_system,
-        input_path=input_path,
-        output_path=output_path,
-        error_path=error_path,
         attribute=configs["attribute"],
-        eps=configs["clustering"]["eps"],
-        min_samples=configs["clustering"]["min_samples"],
+        path=PathConfig(input=input_path, output=output_path, error=error_path),
+        clustering=ClusteringConfig(
+            eps=configs["clustering"]["eps"],
+            min_samples=configs["clustering"]["min_samples"],
+        ),
+        mailing=MailingConfig(
+            host=configs["mailing"]["host"],
+            port=configs["mailing"]["port"],
+            sender=configs["mailing"]["sender"],
+            reveiver=configs["mailing"]["receiver"],
+        ),
     )
-
 
 
 CONFIGS_CLUSTERING_PATH = Path("configs") / "config.json"

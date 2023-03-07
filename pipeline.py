@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 # MODELS
-from models.cluseting_config import ClusteringConfig
+from models.config import Config
 
 # CLUSTERING
 from clustering import Clustering
@@ -14,11 +14,11 @@ from clustering import Clustering
 from utils import mailing
 
 # CONFIGS
-from core import LOGGER
+from core import LOGGER, CONFIGS
 
 
 class PipeLine:
-    def __init__(self, config: ClusteringConfig) -> None:
+    def __init__(self, config: Config) -> None:
         self.config = config
 
     def start(self):
@@ -28,11 +28,11 @@ class PipeLine:
 
             klarf_paths = sorted(
                 [
-                    Path(os.path.join(self.config.input_path, f))
-                    for f in os.listdir(self.config.input_path)
-                    if os.path.isfile(os.path.join(self.config.input_path, f))
+                    Path(os.path.join(self.config.path.input, f))
+                    for f in os.listdir(self.config.path.input)
+                    if os.path.isfile(os.path.join(self.config.path.input, f))
                 ],
-                key=lambda x: os.path.getmtime(os.path.join(self.config.input_path, x)),
+                key=lambda x: os.path.getmtime(os.path.join(self.config.path.input, x)),
             )
 
             nbr_klarfs = len(klarf_paths)
@@ -52,7 +52,7 @@ class PipeLine:
                                 break
                             size = new_size
 
-                        timestamp = clustering.apply(
+                        clustering.apply(
                             klarf_path=klarf_path,
                             baby_klarf=True,
                         )
@@ -60,18 +60,15 @@ class PipeLine:
                         if os.path.exists(klarf_path):
                             os.remove(klarf_path)
 
-                        LOGGER.info(
-                            msg=f"{klarf=} was processed successfully in {timestamp}s"
-                        )
                     except Exception as ex:
                         shutil.move(
                             src=klarf_path,
                             dst=os.path.join(
-                                self.config.error_path, os.path.basename(klarf_path)
+                                self.config.path.error, os.path.basename(klarf_path)
                             ),
                         )
 
-                        message_error = f"{klarf=} processing failed, moved to {self.config.error_path}"
+                        message_error = f"{klarf=} processing failed, moved to {self.config.path.error}"
 
                         html = f"""\
                             <html>
@@ -82,8 +79,8 @@ class PipeLine:
                         """
 
                         mailing.send_mail(
-                            sender="clustering.cro@st.com",
-                            receiver="FEM_DREAM_NOTIFICATIONS@list.st.com",
+                            sender=CONFIGS.mailing.sender,
+                            receiver=CONFIGS.mailing.reveiver,
                             subject=f"Clustering - Error on {klarf}",
                             msg_html=html,
                         )
