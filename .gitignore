@@ -85,8 +85,5 @@ venv.bak/
 logs
 .vs
 
-configs/config.json
-
-
-
-
+#configs
+configs/*.json
