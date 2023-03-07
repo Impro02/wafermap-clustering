@@ -35,3 +35,8 @@ def load_config(filepath: Path):
         eps=configs["clustering"]["eps"],
         min_samples=configs["clustering"]["min_samples"],
     )
+
+
+
+CONFIGS_CLUSTERING_PATH = Path("configs") / "config.json"
+CONFIGS = load_config(filepath=CONFIGS_CLUSTERING_PATH)

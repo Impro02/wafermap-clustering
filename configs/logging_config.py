@@ -1,6 +1,8 @@
 import sys
 import logging
 
+from configs.config import CONFIGS
+
 
 def setup_logger(platform: str):
 
@@ -22,3 +24,5 @@ def setup_logger(platform: str):
             logger = logging.getLogger()
 
     return logger
+
+LOGGER = setup_logger(platform=CONFIGS.platform)
