@@ -2,11 +2,12 @@
 import time
 import os
 from pathlib import Path
-from typing import List
-from sklearn.cluster import DBSCAN
 
 # NUMPY
 import numpy as np
+
+# SCIKIT_LEARN
+from sklearn.cluster import DBSCAN
 
 # KLARF_READER
 from klarf_reader.klarf import Klarf
