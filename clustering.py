@@ -1,12 +1,16 @@
 # MODULES
 import time
-import numpy as np
+import os
 from pathlib import Path
 from typing import List
 from sklearn.cluster import DBSCAN
 
+# NUMPY
+import numpy as np
+
 # KLARF_READER
 from klarf_reader.klarf import Klarf
+from klarf_reader.utils import klarf_convert
 
 # MODELS
 from models.cluseting_config import ClusteringConfig
@@ -28,10 +32,12 @@ class Clustering:
 
         klarf_content = Klarf.load_from_file(filepath=klarf_path)
 
-        for wafer in klarf_content.wafers:
-            tic = time.time()
+        klarf_basename = os.path.basename(klarf_path)
+        klarf_name, klarf_extension = os.path.splitext(klarf_basename)
 
-            defect_ids = [defect.id for defect in wafer.defects]
+        tic = time.time()
+        for index, wafer in enumerate(klarf_content.wafers):
+            defect_ids = np.array([defect.id for defect in wafer.defects])
             defect_points = np.array(
                 [
                     (defect.point[0] / 1000, defect.point[1] / 1000)
@@ -43,32 +49,26 @@ class Clustering:
                 eps=self.config.eps, min_samples=self.config.min_samples
             ).fit(defect_points)
 
-            clustering_values, clusters = np.column_stack(
-                (np.array(defect_ids), clustering.labels_)
-            ), np.unique(clustering.labels_, axis=0)
+            clustering_values = np.column_stack((defect_ids, clustering.labels_))
 
-            defect_dict = {defect.id: defect for defect in wafer.defects}
-            clustered_defects = {c: [] for c in clusters}
-            for defect_id, cluster_label in clustering_values:
-                if defect_id in defect_dict:
-                    defect = defect_dict[defect_id]
-                    cluster = clustered_defects[cluster_label]
-                    cluster.append(
-                        ClusteredDefect(
-                            defect_id=defect.id,
-                            bin=cluster_label,
-                        )
-                    )
+            clusters = np.unique(clustering.labels_, axis=0)
 
-            clustered_defect_points: List[ClusteredDefect] = [
-                point for cluster in clustered_defects.values() for point in cluster
+            clustered_defects = [
+                ClusteredDefect(
+                    defect_id=defect_id,
+                    bin=cluster_label,
+                )
+                for defect_id, cluster_label in clustering_values
             ]
 
             if baby_klarf:
                 klarf_lib.write_clustered_baby_klarf(
-                    klarf_content=klarf_content,
-                    clustered_defects=clustered_defect_points,
-                    output_path=Path(self.config.output_path),
+                    klarf_content=klarf_convert.convert_to_single_klarf_content(
+                        klarf_content=klarf_content, wafer_index=index
+                    ),
+                    clustered_defects=clustered_defects,
+                    output_name=Path(self.config.output_path)
+                    / f"{klarf_name}_clustered{klarf_extension}",
                 )
 
-            return time.time() - tic
+        return time.time() - tic

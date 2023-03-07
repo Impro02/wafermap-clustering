@@ -58,7 +58,12 @@ def start():
                         msg=f"{klarf=} was processed successfully in {timestamp}s"
                     )
                 except Exception as ex:
-                    shutil.move(klarf_path, CONFIGS.error_path)
+                    shutil.move(
+                        src=klarf_path,
+                        dst=os.path.join(
+                            CONFIGS.error_path, os.path.basename(klarf_path)
+                        ),
+                    )
 
                     LOGGER.critical(
                         msg=f"{klarf=} processing failed, moved to {CONFIGS.error_path}",
