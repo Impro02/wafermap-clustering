@@ -8,7 +8,7 @@ from pathlib import Path
 from models.config import Config
 
 # CLUSTERING
-from clustering import Clustering
+from libs.clustering_lib import Clustering
 
 # UTILS
 from utils import mailing
@@ -79,8 +79,10 @@ class PipeLine:
                         """
 
                         mailing.send_mail(
+                            host=CONFIGS.mailing.host,
+                            port=CONFIGS.mailing.port,
                             sender=CONFIGS.mailing.sender,
-                            receiver=CONFIGS.mailing.reveiver,
+                            receiver=CONFIGS.mailing.receiver,
                             subject=f"Clustering - Error on {klarf}",
                             msg_html=html,
                         )

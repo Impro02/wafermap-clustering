@@ -2,6 +2,7 @@
 import time
 import os
 from pathlib import Path
+from typing import List
 
 # NUMPY
 import numpy as np
@@ -16,6 +17,7 @@ from klarf_reader.utils import klarf_convert
 # MODELS
 from models.config import Config
 from models.clustered_defect import ClusteredDefect
+from models.clustering_result import ClusteringResult
 
 # LIBS
 from libs import klarf_lib
@@ -32,13 +34,14 @@ class Clustering:
         self,
         klarf_path: Path,
         baby_klarf: bool = False,
-    ) -> None:
+    ) -> List[ClusteringResult]:
 
         klarf_basename = os.path.basename(klarf_path)
         klarf_name, klarf_extension = os.path.splitext(klarf_basename)
 
         klarf_content = Klarf.load_from_file(filepath=klarf_path)
 
+        results: List[ClusteringResult] = []
         for index, wafer in enumerate(klarf_content.wafers):
             tic = time.time()
 
@@ -70,9 +73,6 @@ class Clustering:
                 )
                 for defect_id, cluster_label in clustering_values
             ]
-            LOGGER.info(
-                msg=f"(lot={single_klarf.lot_id}, step_id={single_klarf.step_id}, wafer_id={single_klarf.wafer.id}, inspection_time={single_klarf.result_timestamp}) was processed in {time.time() - tic} [{clusters=}]"
-            )
 
             if baby_klarf:
                 klarf_lib.write_clustered_baby_klarf(
@@ -81,3 +81,23 @@ class Clustering:
                     output_name=Path(self.config.path.output)
                     / f"{klarf_name}_clustered{klarf_extension}",
                 )
+
+            tac = time.time() - tic
+
+            results.append(
+                ClusteringResult(
+                    result_timestamp=single_klarf.result_timestamp,
+                    lot_id=single_klarf.lot_id,
+                    step_id=single_klarf.step_id,
+                    wafer_id=single_klarf.wafer.id,
+                    clusters=clusters,
+                    processing_timestamp=tac,
+                    clustered_defects=clustered_defects,
+                )
+            )
+
+            LOGGER.info(
+                msg=f"(lot={single_klarf.lot_id}, step_id={single_klarf.step_id}, wafer_id={single_klarf.wafer.id}, inspection_time={single_klarf.result_timestamp}) was processed in {tac} [{clusters=}]"
+            )
+
+        return results

@@ -38,7 +38,7 @@ def load_config(filepath: Path):
             host=configs["mailing"]["host"],
             port=configs["mailing"]["port"],
             sender=configs["mailing"]["sender"],
-            reveiver=configs["mailing"]["receiver"],
+            receiver=configs["mailing"]["receiver"],
         ),
     )
 

@@ -5,7 +5,7 @@ class MailingConfig:
     host: str
     port: int
     sender: str
-    reveiver: str
+    receiver: str
 
 @dataclass
 class PathConfig:
