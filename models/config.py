@@ -1,4 +1,6 @@
+# MODULES
 from dataclasses import dataclass
+
 
 @dataclass
 class MailingConfig:
@@ -7,11 +9,13 @@ class MailingConfig:
     sender: str
     receiver: str
 
+
 @dataclass
 class PathConfig:
     input: str
     output: str
     error: str
+
 
 @dataclass
 class ClusteringConfig:
@@ -21,6 +25,7 @@ class ClusteringConfig:
 
 @dataclass
 class Config:
+    time_sleep: int
     platform: str
     attribute: str
     path: PathConfig

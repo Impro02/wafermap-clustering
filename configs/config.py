@@ -27,6 +27,7 @@ def load_config(filepath: Path):
         error_path = "/data/clustering/error"
 
     return Config(
+        time_sleep=configs["time_sleep"],
         platform=platform_system,
         attribute=configs["attribute"],
         path=PathConfig(input=input_path, output=output_path, error=error_path),
