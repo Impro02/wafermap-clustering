@@ -3,11 +3,12 @@ import os
 from pathlib import Path
 
 # MODELS
-from models.clustering_result import ClusteringResult
+from ..models.clustering_result import ClusteringResult
 
 
 def write_baby_klarf(
     clustering_result: ClusteringResult,
+    attribute: str,
     output_name: Path = None,
 ):
     if output_name is None:
@@ -34,7 +35,7 @@ def write_baby_klarf(
         f.write(f'DeviceID "{clustering_result.device_id}";\n')
         f.write(f'StepID "{clustering_result.step_id}";\n')
         f.write(f'WaferID "{clustering_result.wafer_id}";\n')
-        f.write(f"DefectRecordSpec 2 DEFECTID DYN_CLUSTER_ID ;\n")
+        f.write(f"DefectRecordSpec 2 DEFECTID {attribute} ;\n")
         f.write(f"DefectList\n")
         f.write("".join(defects))
         f.write("EndOfFile;")

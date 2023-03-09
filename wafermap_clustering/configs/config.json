@@ -1,0 +1,7 @@
+{
+    "attribute": "DYN_CLUSTER_ID",
+    "clustering": {
+        "eps": 4,
+        "min_samples": 3
+    }
+}

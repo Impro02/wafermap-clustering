@@ -1,8 +1,8 @@
 # MODULES
 import time
-import os
 from pathlib import Path
 from typing import List
+from logging import Logger
 
 # NUMPY
 import numpy as np
@@ -15,20 +15,23 @@ from klarf_reader.klarf import Klarf
 from klarf_reader.utils import klarf_convert
 
 # MODELS
-from models.config import ClusteringConfig
-from models.clustered_defect import ClusteredDefect
-from models.clustering_result import ClusteringResult
+from .models.config import Config
+from .models.clustered_defect import ClusteredDefect
+from .models.clustering_result import ClusteringResult
 
 # LIBS
-from libs import klarf_lib
+from .libs import klarf_lib
 
-# CORE
-from core import LOGGER
+# CONFIGS
+from .configs.logging_config import setup_logger
 
 
 class Clustering:
-    def __init__(self, config: ClusteringConfig) -> None:
+    def __init__(self, config: Config, logger: Logger = None) -> None:
         self.config = config
+        self.logger = (
+            setup_logger(platform=self.config.platform) if logger is None else logger
+        )
 
     def apply(
         self,
@@ -55,8 +58,8 @@ class Clustering:
             )
 
             clustering = DBSCAN(
-                eps=self.config.eps,
-                min_samples=self.config.min_samples,
+                eps=self.config.clustering.eps,
+                min_samples=self.config.clustering.min_samples,
             ).fit(defect_points)
 
             clustering_values = np.column_stack((defect_ids, clustering.labels_))
@@ -85,17 +88,16 @@ class Clustering:
             if output_path is not None:
                 klarf_lib.write_baby_klarf(
                     clustering_result=clustering_result,
+                    attribute=self.config.attribute,
                     output_name=output_path,
                 )
 
-            tac = time.time() - tic
-
-            clustering_result.processing_timestamp = tac
+            clustering_result.processing_timestamp = time.time() - tic
 
             results.append(clustering_result)
 
-            LOGGER.info(
-                msg=f"(lot={single_klarf.lot_id}, step_id={single_klarf.step_id}, wafer_id={single_klarf.wafer.id}, inspection_time={single_klarf.result_timestamp}) was processed in {tac} [{clusters=}]"
+            self.logger.info(
+                msg=f"({repr(clustering_result)}) was processed in {clustering_result.processing_timestamp} [{clusters=}]"
             )
 
         return results

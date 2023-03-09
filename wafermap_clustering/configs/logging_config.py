@@ -1,12 +1,14 @@
+# MODULES
 import sys
 import logging
-
-from configs.config import CONFIGS
 
 
 def setup_logger(platform: str):
 
-    match platform.lower():
+    if platform is not None:
+        platform = platform.lower()
+
+    match platform:
         case "windows":
             logger = logging.getLogger(name="clustering")
             logger.setLevel(logging.INFO)
@@ -24,5 +26,3 @@ def setup_logger(platform: str):
             logger = logging.getLogger()
 
     return logger
-
-LOGGER = setup_logger(platform=CONFIGS.platform)

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 # MODELS
-from models.clustered_defect import ClusteredDefect
+from ..models.clustered_defect import ClusteredDefect
 
 
 @dataclass
@@ -21,3 +21,6 @@ class ClusteringResult:
     @property
     def number_of_defects(self):
         return len(self.clustered_defects)
+
+    def __repr__(self) -> str:
+        return f"{self.lot_id=}, {self.step_id=}, {self.wafer_id=}, {self.result_timestamp=}"
