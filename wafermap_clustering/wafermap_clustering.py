@@ -27,10 +27,15 @@ from .configs.logging_config import setup_logger
 
 
 class Clustering:
-    def __init__(self, config: Config, logger: Logger = None) -> None:
+    def __init__(
+        self, config: Config, logger: Logger = None, autocreate_logger: bool = False
+    ) -> None:
         self.config = config
+
         self.logger = (
-            setup_logger(platform=self.config.platform) if logger is None else logger
+            setup_logger(platform=self.config.platform)
+            if autocreate_logger and self.logger is None
+            else logger
         )
 
     def apply(
@@ -96,8 +101,9 @@ class Clustering:
 
             results.append(clustering_result)
 
-            self.logger.info(
-                msg=f"({repr(clustering_result)}) was processed in {clustering_result.processing_timestamp} [{clusters=}]"
-            )
+            if self.logger is not None:
+                self.logger.info(
+                    msg=f"({repr(clustering_result)}) was processed in {clustering_result.processing_timestamp} [{clusters=}]"
+                )
 
         return results

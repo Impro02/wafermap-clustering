@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.1.0"
+version = "0.1.1"
 
 setup(
     name="wafermap-clustering",
@@ -10,19 +10,17 @@ setup(
         "wafermap_clustering.configs",
         "wafermap_clustering.libs",
         "wafermap_clustering.models",
-        "wafermap_clustering.utils",
     ],
     install_requires=[
-        "numpy",
         "klarf-reader",
         "scikit-learn",
     ],
     license="MIT",
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
-    description="A project to apply clustering in wafermaps",
+    description="A project to apply clustering on wafermaps",
     url="https://github.com/Impro02/klarf_reader",
-    download_url="https://github.com/Impro02/wafermap_clustering/archive/refs/tags/%s.tar.gz"
+    download_url="https://github.com/Impro02/wafermap-clustering/archive/refs/tags/%s.tar.gz"
     % version,
     classifiers=[
         "Development Status :: 3 - Alpha",
