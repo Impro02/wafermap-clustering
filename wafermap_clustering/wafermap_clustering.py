@@ -14,6 +14,8 @@ from sklearn.cluster import DBSCAN
 from klarf_reader.klarf import Klarf
 from klarf_reader.utils import klarf_convert
 
+from wafermap_clustering.configs.config import KlarfFormat
+
 # MODELS
 from .models.config import Config
 from .models.clustered_defect import ClusteredDefect
@@ -42,6 +44,7 @@ class Clustering:
         self,
         klarf_path: Path,
         output_path: Path = None,
+        klarf_format=KlarfFormat.BABY.value,
     ) -> List[ClusteringResult]:
 
         klarf_content = Klarf.load_from_file(filepath=klarf_path)
@@ -90,12 +93,20 @@ class Clustering:
                 clustered_defects=clustered_defects,
             )
 
-            if output_path is not None:
-                klarf_lib.write_baby_klarf(
-                    clustering_result=clustering_result,
-                    attribute=self.config.attribute,
-                    output_name=output_path,
-                )
+            match klarf_format:
+                case KlarfFormat.BABY.value if output_path is not None:
+                    klarf_lib.write_baby_klarf(
+                        clustering_result=clustering_result,
+                        attribute=self.config.attribute,
+                        output_filename=output_path,
+                    )
+                case KlarfFormat.FULL.value if output_path is not None:
+                    klarf_lib.write_full_klarf(
+                        klarf_path=klarf_path,
+                        clustering_result=clustering_result,
+                        attribute=self.config.attribute,
+                        output_filename=output_path,
+                    )
 
             clustering_result.processing_timestamp = time.time() - tic
 

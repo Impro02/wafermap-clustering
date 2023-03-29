@@ -2,10 +2,16 @@
 import json
 import platform
 import os
+from enum import Enum
 from pathlib import Path
 
 # MODELS
 from ..models.config import Config, ClusteringConfig
+
+
+class KlarfFormat(Enum):
+    BABY = "baby"
+    FULL = "full"
 
 
 def load_config(filepath: Path):
