@@ -1,6 +1,7 @@
 # MODULES
 import os
 from pathlib import Path
+from typing import List
 
 # MODELS
 from ..models.clustering_result import ClusteringResult
@@ -17,7 +18,7 @@ def generate_output_file_name(output_name: str, clustering_result: ClusteringRes
 
 
 def write_full_klarf(
-    klarf_path: Path,
+    raw_content: List[str],
     clustering_result: ClusteringResult,
     attribute: str,
     output_filename: Path = None,
@@ -26,17 +27,16 @@ def write_full_klarf(
         output_name=output_filename, clustering_result=clustering_result
     )
 
-    with open(klarf_path, "r") as f:
-        # Read the contents of the file
-        contents = f.readlines()
-
     # Open a new file in write mode
     with open(output_filename, "w") as f:
         next_line_has_coords = False
-        for line in contents:
+        for line in raw_content:
             if line.lstrip().lower().startswith("defectrecordspec"):
                 line_tmp = line.split(";")
-                line_tmp = f"{line_tmp[0]}{attribute};\n"
+                line_tmp = line_tmp[0].split(" ")
+
+                line_tmp[1] = str(int(line_tmp[1]) + 1)
+                line_tmp = f"{' '.join(line_tmp)}{attribute};\n"
                 f.write(line_tmp)
                 continue
             if line.lstrip().lower().startswith("defectlist") and not (

@@ -47,7 +47,9 @@ class Clustering:
         klarf_format=KlarfFormat.BABY.value,
     ) -> List[ClusteringResult]:
 
-        klarf_content = Klarf.load_from_file(filepath=klarf_path)
+        klarf_content, raw_content = Klarf.load_from_file_with_raw_content(
+            filepath=klarf_path
+        )
 
         results: List[ClusteringResult] = []
         for index, wafer in enumerate(klarf_content.wafers):
@@ -102,7 +104,7 @@ class Clustering:
                     )
                 case KlarfFormat.FULL.value if output_path is not None:
                     klarf_lib.write_full_klarf(
-                        klarf_path=klarf_path,
+                        raw_content=raw_content,
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
                         output_filename=output_path,
