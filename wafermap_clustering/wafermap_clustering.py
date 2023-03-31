@@ -10,11 +10,14 @@ import numpy as np
 # SCIKIT_LEARN
 from sklearn.cluster import DBSCAN
 
+# HDBSCAN
+from hdbscan import HDBSCAN
+
 # KLARF_READER
 from klarf_reader.klarf import Klarf
 from klarf_reader.utils import klarf_convert
 
-from wafermap_clustering.configs.config import KlarfFormat
+from wafermap_clustering.configs.config import ClusteringMode, KlarfFormat
 
 # MODELS
 from .models.config import Config
@@ -45,6 +48,7 @@ class Clustering:
         klarf_path: Path,
         output_path: Path = None,
         klarf_format=KlarfFormat.BABY.value,
+        clustering_mode=ClusteringMode.DBSCAN.value,
     ) -> List[ClusteringResult]:
 
         klarf_content, raw_content = Klarf.load_from_file_with_raw_content(
@@ -67,14 +71,22 @@ class Clustering:
                 ]
             )
 
-            clustering = DBSCAN(
-                eps=self.config.clustering.eps,
-                min_samples=self.config.clustering.min_samples,
-            ).fit(defect_points)
+            match clustering_mode:
+                case ClusteringMode.DBSCAN.value:
+                    clustering = DBSCAN(
+                        eps=self.config.clustering.dbscan.eps,
+                        min_samples=self.config.clustering.dbscan.min_samples,
+                    )
+                    labels = clustering.fit_predict(defect_points)
+                case ClusteringMode.HDBSCAN.value:
+                    hdbscan = HDBSCAN(
+                        min_samples=self.config.clustering.hdbscan.min_samples,
+                        min_cluster_size=self.config.clustering.hdbscan.min_cluster_size,
+                    )
+                    labels = hdbscan.fit_predict(defect_points)
 
-            clustering_values = np.column_stack((defect_ids, clustering.labels_))
-
-            clusters = len(np.unique(clustering.labels_, axis=0))
+            clustering_values = np.column_stack((defect_ids, labels))
+            clusters = len(np.unique(labels, axis=0))
 
             clustered_defects = [
                 ClusteredDefect(

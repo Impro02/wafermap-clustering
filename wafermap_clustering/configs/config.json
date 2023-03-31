@@ -1,7 +1,13 @@
 {
     "attribute": "DYN_CLUSTER_ID",
     "clustering": {
-        "eps": 4,
-        "min_samples": 3
+        "dbscan": {
+            "eps": 4,
+            "min_samples": 3
+        },
+        "hdbscan": {
+            "min_samples": 3,
+            "min_cluster_size": null
+        }
     }
 }

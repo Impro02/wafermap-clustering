@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 
 # MODELS
-from ..models.config import Config, ClusteringConfig
+from ..models.config import Config, ClusteringConfig, DBSCANConfig, HDBSCANConfig
 
 
 class KlarfFormat(Enum):
@@ -14,13 +14,20 @@ class KlarfFormat(Enum):
     FULL = "full"
 
 
+class ClusteringMode(Enum):
+    DBSCAN = "dbscan"
+    HDBSCAN = "hdbscan"
+
+
 def load_config(filepath: Path):
-    root_config, clustering_config = {}, {}
+    root_config, clustering_config, dbscan_config, hdbscan_config = {}, {}, {}, {}
     if os.path.exists(filepath):
         with open(filepath, encoding="utf-8") as json_data_file:
             try:
                 root_config: dict = json.load(json_data_file)
                 clustering_config = root_config.get("clustering", {})
+                dbscan_config = clustering_config.get("dbscan", {})
+                hdbscan_config = clustering_config.get("hdbscan", {})
             except Exception as ex:
                 print(f"Configuration file {filepath} is invalid: {ex}")
                 exit()
@@ -29,8 +36,14 @@ def load_config(filepath: Path):
         platform=platform.system().lower(),
         attribute=root_config.get("attribute", None),
         clustering=ClusteringConfig(
-            eps=clustering_config.get("eps", None),
-            min_samples=clustering_config.get("min_samples", None),
+            dbscan=DBSCANConfig(
+                min_samples=dbscan_config.get("min_samples", None),
+                eps=dbscan_config.get("eps", None),
+            ),
+            hdbscan=HDBSCANConfig(
+                min_samples=hdbscan_config.get("min_samples", None),
+                min_cluster_size=hdbscan_config.get("eps", None),
+            ),
         ),
     )
 

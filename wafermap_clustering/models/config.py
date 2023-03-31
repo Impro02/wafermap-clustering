@@ -3,9 +3,21 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ClusteringConfig:
-    eps: int
+class DBSCANConfig:
     min_samples: int
+    eps: int
+
+
+@dataclass
+class HDBSCANConfig:
+    min_samples: int
+    min_cluster_size: int
+
+
+@dataclass
+class ClusteringConfig:
+    dbscan: DBSCANConfig
+    hdbscan: HDBSCANConfig
 
 
 @dataclass
