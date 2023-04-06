@@ -18,6 +18,7 @@ from klarf_reader.klarf import Klarf
 from klarf_reader.utils import klarf_convert
 
 from wafermap_clustering.configs.config import ClusteringMode, KlarfFormat
+from wafermap_clustering.models.clustering_performance import ClusteringPerformance
 
 # MODELS
 from .models.config import Config
@@ -36,10 +37,9 @@ class Clustering:
         self, config: Config, logger: Logger = None, autocreate_logger: bool = False
     ) -> None:
         self.config = config
-
         self.logger = (
-            setup_logger(platform=self.config.platform)
-            if autocreate_logger and self.logger is None
+            setup_logger(name="clustering", path=Path(__file__).parent)
+            if autocreate_logger and logger is None
             else logger
         )
 
@@ -96,6 +96,8 @@ class Clustering:
                 for defect_id, cluster_label in clustering_values
             ]
 
+            clustering_timestamp = time.time() - tic
+
             clustering_result = ClusteringResult(
                 file_version=single_klarf.file_version,
                 result_timestamp=single_klarf.result_timestamp,
@@ -107,28 +109,34 @@ class Clustering:
                 clustered_defects=clustered_defects,
             )
 
+            output_timestamp = None
             match klarf_format:
                 case KlarfFormat.BABY.value if output_path is not None:
-                    klarf_lib.write_baby_klarf(
+                    output_timestamp = klarf_lib.write_baby_klarf(
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
                         output_filename=output_path,
                     )
                 case KlarfFormat.FULL.value if output_path is not None:
-                    klarf_lib.write_full_klarf(
+                    output_timestamp = klarf_lib.write_full_klarf(
                         raw_content=raw_content,
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
                         output_filename=output_path,
                     )
 
-            clustering_result.processing_timestamp = time.time() - tic
+            clustering_result.performance = ClusteringPerformance(
+                clustering_timestamp=round(clustering_timestamp, 3),
+                output_timestamp=round(output_timestamp, 3)
+                if output_timestamp is not None
+                else None,
+            )
 
             results.append(clustering_result)
 
             if self.logger is not None:
                 self.logger.info(
-                    msg=f"({repr(clustering_result)}) was processed in {clustering_result.processing_timestamp} [{clusters=}]"
+                    msg=f"({repr(clustering_result)}) was sucessfully processed [defects={len(defect_ids)}, {clusters=}] with ({repr(clustering_result.performance)}) "
                 )
 
         return results

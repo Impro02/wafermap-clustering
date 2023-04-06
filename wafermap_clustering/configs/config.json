@@ -7,7 +7,7 @@
         },
         "hdbscan": {
             "min_samples": 3,
-            "min_cluster_size": null
+            "min_cluster_size": 5
         }
     }
 }

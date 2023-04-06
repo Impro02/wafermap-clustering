@@ -1,5 +1,6 @@
 # MODULES
 import os
+import time
 from pathlib import Path
 from typing import List
 
@@ -14,6 +15,12 @@ def generate_output_file_name(output_name: str, clustering_result: ClusteringRes
             / f"{clustering_result.lot_id}_{clustering_result.step_id}_{clustering_result.wafer_id}_clustered.000"
         )
 
+    if os.path.isdir(output_name):
+        output_name = (
+            Path(output_name)
+            / f"{clustering_result.lot_id}_{clustering_result.step_id}_{clustering_result.wafer_id}_clustered.000"
+        )
+
     return output_name
 
 
@@ -22,10 +29,17 @@ def write_full_klarf(
     clustering_result: ClusteringResult,
     attribute: str,
     output_filename: Path = None,
-):
+) -> float:
     output_filename = generate_output_file_name(
         output_name=output_filename, clustering_result=clustering_result
     )
+
+    tic = time.time()
+
+    bin_by_defect_id = {
+        cluster.defect_id: cluster.bin
+        for cluster in clustering_result.clustered_defects
+    }
 
     # Open a new file in write mode
     with open(output_filename, "w") as f:
@@ -48,17 +62,8 @@ def write_full_klarf(
 
             if next_line_has_coords:
                 is_last_row = line.rstrip().endswith(";")
-
                 defect_id = int(line.split()[0])
-
-                bin = next(
-                    (
-                        cluster.bin
-                        for cluster in clustering_result.clustered_defects
-                        if cluster.defect_id == defect_id
-                    ),
-                    None,
-                )
+                bin = bin_by_defect_id.get(defect_id)
 
                 next_line_has_coords = not is_last_row
                 f.write(
@@ -71,15 +76,19 @@ def write_full_klarf(
                 # Write the original line to the new file
                 f.write(line)
 
+    return time.time() - tic
+
 
 def write_baby_klarf(
     clustering_result: ClusteringResult,
     attribute: str,
     output_filename: Path = None,
-):
+) -> float:
     output_filename = generate_output_file_name(
         output_name=output_filename, clustering_result=clustering_result
     )
+
+    tic = time.time()
 
     file_version = " ".join(str(clustering_result.file_version).split("."))
 
@@ -103,6 +112,8 @@ def write_baby_klarf(
         f.write(f"DefectList\n")
         f.write("".join(defects))
         f.write("EndOfFile;")
+
+    return time.time() - tic
 
 
 def create_baby_defect_row(defect_id: int, bin: int, last_row: bool = False):

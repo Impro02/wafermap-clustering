@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import List
 
+from wafermap_clustering.models.clustering_performance import ClusteringPerformance
+
 # MODELS
 from ..models.clustered_defect import ClusteredDefect
 
@@ -16,7 +18,7 @@ class ClusteringResult:
     wafer_id: str
     clusters: int
     clustered_defects: List[ClusteredDefect] = field(default=lambda: [])
-    processing_timestamp: float = field(default=lambda: None)
+    performance: ClusteringPerformance = None
 
     @property
     def number_of_defects(self):
