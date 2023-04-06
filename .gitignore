@@ -83,6 +83,7 @@ venv.bak/
 .log
 .log.*
 logs
+wafermap_clustering/*.log
 .vs
 
 #configs
