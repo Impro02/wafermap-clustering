@@ -117,7 +117,7 @@ class Clustering:
             output_filename = (
                 (
                     output_directory
-                    / f"{single_klarf.lot_id}_{single_klarf.step_id}_{single_klarf.wafer.id}.000"
+                    / f"{single_klarf.lot_id}_{single_klarf.step_id}_{single_klarf.wafer.id}_{clustering_mode}.000"
                 )
                 if output_directory is not None
                 else None
