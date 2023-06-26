@@ -1,10 +1,14 @@
 # MODULES
+from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import sys
 import logging
 
+# CONFIG
+from ..configs.config import CONFIGS
 
-def setup_logger(name: str, path: Path):
+
+def setup_logger(name: str):
     logger = logging.getLogger(name=name)
 
     if not logger.hasHandlers():
@@ -21,9 +25,17 @@ def setup_logger(name: str, path: Path):
         logger.addHandler(stream_handler)
 
         # Add a file handler to log messages to a file
-        file_handler = logging.FileHandler(filename=path / f"{name}.log")
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+        directory = Path(CONFIGS.directories.logs)
+        directory.mkdir(parents=True, exist_ok=True)
+
+        time_rotating_handler = TimedRotatingFileHandler(
+            filename=directory / f"{name}.log",
+            when="midnight",
+            interval=1,
+            backupCount=10,
+        )
+        time_rotating_handler.setLevel(logging.INFO)
+        time_rotating_handler.setFormatter(formatter)
+        logger.addHandler(time_rotating_handler)
 
     return logger

@@ -1,4 +1,19 @@
 {
+    "project_name": "wafermap-clustering",
+    "directories": {
+        "logs": "{{root}}/logs",
+        "tmp": "{{root}}/tmp"
+    },
+    "platforms": {
+        "windows": {
+            "root": "/{{project_name}}",
+            "home": "/{{project_name}}"
+        },
+        "linux": {
+            "root": "/application/{{user}}",
+            "home": "/home/{{user}}"
+        }
+    },
     "attribute": "DYN_CLUSTER_ID",
     "clustering": {
         "dbscan": {

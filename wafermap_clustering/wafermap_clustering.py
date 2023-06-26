@@ -34,11 +34,14 @@ from .configs.logging_config import setup_logger
 
 class Clustering:
     def __init__(
-        self, config: Config, logger: Logger = None, autocreate_logger: bool = False
+        self,
+        config: Config,
+        logger: Logger = None,
+        autocreate_logger: bool = False,
     ) -> None:
         self.config = config
         self.logger = (
-            setup_logger(name="clustering", path=Path(__file__).parent)
+            setup_logger(name="clustering")
             if autocreate_logger and logger is None
             else logger
         )
