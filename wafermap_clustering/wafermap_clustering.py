@@ -17,18 +17,16 @@ from hdbscan import HDBSCAN
 from klarf_reader.klarf import Klarf
 from klarf_reader.utils import klarf_convert
 
-from wafermap_clustering.configs.config import ClusteringMode, KlarfFormat
-from wafermap_clustering.models.clustering_performance import ClusteringPerformance
-
 # MODELS
-from .models.config import Config
 from .models.clustered_defect import ClusteredDefect
+from .models.clustering_performance import ClusteringPerformance
 from .models.clustering_result import ClusteringResult
 
 # LIBS
 from .libs import klarf_lib
 
 # CONFIGS
+from .configs.config import ClusteringMode, Config, KlarfFormat
 from .configs.logging_config import setup_logger
 
 
@@ -41,7 +39,10 @@ class Clustering:
     ) -> None:
         self.config = config
         self.logger = (
-            setup_logger(name="clustering")
+            setup_logger(
+                name="clustering",
+                directory=Path(self.config.directories.logs),
+            )
             if autocreate_logger and logger is None
             else logger
         )

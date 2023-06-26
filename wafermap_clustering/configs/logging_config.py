@@ -1,14 +1,10 @@
 # MODULES
+import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-import sys
-import logging
-
-# CONFIG
-from ..configs.config import CONFIGS
 
 
-def setup_logger(name: str):
+def setup_logger(name: str, directory: Path):
     logger = logging.getLogger(name=name)
 
     if not logger.hasHandlers():
@@ -18,14 +14,7 @@ def setup_logger(name: str):
             "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
 
-        # Add a stream handler to log messages to stdout
-        stream_handler = logging.StreamHandler(stream=sys.stdout)
-        stream_handler.setLevel(logging.INFO)
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
         # Add a file handler to log messages to a file
-        directory = Path(CONFIGS.directories.logs)
         directory.mkdir(parents=True, exist_ok=True)
 
         time_rotating_handler = TimedRotatingFileHandler(
