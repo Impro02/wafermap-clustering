@@ -50,7 +50,7 @@ class Clustering:
     def apply(
         self,
         klarf_path: Path,
-        output_path: Path = None,
+        output_directory: Path = None,
         klarf_format=KlarfFormat.BABY.value,
         clustering_mode=ClusteringMode.DBSCAN.value,
     ) -> List[ClusteringResult]:
@@ -114,19 +114,27 @@ class Clustering:
             )
 
             output_timestamp = None
+            output_filename = (
+                (
+                    output_directory
+                    / f"{single_klarf.lot_id}_{single_klarf.step_id}_{single_klarf.wafer.id}.000"
+                )
+                if output_directory is not None
+                else None
+            )
             match klarf_format:
-                case KlarfFormat.BABY.value if output_path is not None:
+                case KlarfFormat.BABY.value if output_directory is not None:
                     output_timestamp = klarf_lib.write_baby_klarf(
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
-                        output_filename=output_path,
+                        output_filename=output_filename,
                     )
-                case KlarfFormat.FULL.value if output_path is not None:
+                case KlarfFormat.FULL.value if output_directory is not None:
                     output_timestamp = klarf_lib.write_full_klarf(
                         raw_content=raw_content,
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
-                        output_filename=output_path,
+                        output_filename=output_filename,
                     )
 
             clustering_result.performance = ClusteringPerformance(
