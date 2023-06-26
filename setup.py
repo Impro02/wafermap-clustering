@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.2.1"
+version = "0.2.3"
 
 setup(
     name="wafermap-clustering",
@@ -19,7 +19,7 @@ setup(
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
     description="A project to apply clustering on wafermaps",
-    url="https://github.com/Impro02/klarf_reader",
+    url="https://github.com/Impro02/wafermap-clustering",
     download_url="https://github.com/Impro02/wafermap-clustering/archive/refs/tags/%s.tar.gz"
     % version,
     classifiers=[
