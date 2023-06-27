@@ -91,7 +91,7 @@ def write_full_klarf(
             f.write(f"InspectionTest {test.id}\n")
             f.write(f"AreaPerTest {test.area:0.10e}\n")
         f.write(
-            f"DefectRecordSpec 14 DEFECTID XREL YREL XINDEX YINDEX XSIZE YSIZE DEFECTAREA DSIZE CLASSNUMBER TEST CLUSTERNUMBER ROUGHBINNUMBER FINEBINNUMBER IMAGECOUNT {attribute} ;\n"
+            f"DefectRecordSpec 16 DEFECTID XREL YREL XINDEX YINDEX XSIZE YSIZE DEFECTAREA DSIZE CLASSNUMBER TEST CLUSTERNUMBER ROUGHBINNUMBER FINEBINNUMBER IMAGECOUNT {attribute} ;\n"
         )
         f.write(f"DefectList\n")
         f.write("".join(defect_rows))
