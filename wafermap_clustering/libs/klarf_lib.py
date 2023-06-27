@@ -1,96 +1,115 @@
 # MODULES
-import os
 import time
 from pathlib import Path
-from typing import List
+import datetime
+
+# KLARF_READER
+from klarf_reader.models.klarf_content import SingleKlarfContent, Defect
 
 # MODELS
 from ..models.clustering_result import ClusteringResult
 
 
-def generate_output_file_name(output_name: str, clustering_result: ClusteringResult):
-    if output_name is None:
-        output_name = (
-            Path(os.getcwd())
-            / f"{clustering_result.lot_id}_{clustering_result.step_id}_{clustering_result.wafer_id}_clustered.000"
-        )
-
-    if os.path.isdir(output_name):
-        output_name = (
-            Path(output_name)
-            / f"{clustering_result.lot_id}_{clustering_result.step_id}_{clustering_result.wafer_id}_clustered.000"
-        )
-
-    return output_name
-
-
 def write_full_klarf(
-    raw_content: List[str],
+    single_klarf: SingleKlarfContent,
     clustering_result: ClusteringResult,
     attribute: str,
-    output_filename: Path = None,
+    output_filename: Path,
 ) -> float:
-    output_filename = generate_output_file_name(
-        output_name=output_filename, clustering_result=clustering_result
-    )
 
     tic = time.time()
 
-    bin_by_defect_id = {
-        cluster.defect_id: cluster.bin
-        for cluster in clustering_result.clustered_defects
+    file_version = " ".join(str(single_klarf.file_version).split("."))
+
+    defect_dict = {
+        defect.defect_id: defect.bin for defect in clustering_result.clustered_defects
     }
 
-    # Open a new file in write mode
+    defect_rows = [
+        create_defect_row(
+            defect=defect,
+            bin=defect_dict.get(defect.id),
+            last_row=index == clustering_result.number_of_defects - 1,
+        )
+        for index, defect in enumerate(single_klarf.wafer.defects)
+    ]
+
+    sample_test_plan = list(
+        zip(
+            single_klarf.sample_plan_test.x,
+            single_klarf.sample_plan_test.y,
+        )
+    )
+
+    num_sample_test_plan = len(sample_test_plan)
+
+    sample_test_plan_rows = [
+        create_sample_test_plan_row(
+            indexes=indexes,
+            last_row=index == num_sample_test_plan - 1,
+        )
+        for index, indexes in enumerate(sample_test_plan)
+    ]
+
     with open(output_filename, "w") as f:
-        next_line_has_coords = False
-        for line in raw_content:
-            if line.lstrip().lower().startswith("defectrecordspec"):
-                line_tmp = line.split(";")
-                line_tmp = line_tmp[0].split(" ")
-
-                line_tmp[1] = str(int(line_tmp[1]) + 1)
-                line_tmp = f"{' '.join(line_tmp)}{attribute};\n"
-                f.write(line_tmp)
-                continue
-            if line.lstrip().lower().startswith("defectlist") and not (
-                line.rstrip().endswith(";")
-            ):
-                next_line_has_coords = True
-                f.write(line)
-                continue
-
-            if next_line_has_coords:
-                is_last_row = line.rstrip().endswith(";")
-                defect_id = int(line.split()[0])
-                bin = bin_by_defect_id.get(defect_id)
-
-                next_line_has_coords = not is_last_row
-                f.write(
-                    create_full_defect_row(
-                        original_row=line, bin=bin, last_row=is_last_row
-                    )
-                )
-
-            else:
-                # Write the original line to the new file
-                f.write(line)
+        f.write(f"FileVersion {file_version};\n")
+        f.write(
+            f"FileTimestamp {datetime.datetime.now().strftime('%m-%d-%y %H:%M:%S')};\n"
+        )
+        f.write(
+            f'InspectionStationID "{single_klarf.inspection_station_id.mfg}" "{single_klarf.inspection_station_id.model}" "{single_klarf.inspection_station_id.id}";\n'
+        )
+        f.write(f"SampleType {single_klarf.sample_type};\n")
+        f.write(f"ResultTimestamp {single_klarf.result_timestamp};\n")
+        f.write(f'LotID "{single_klarf.lot_id}";\n')
+        f.write(f"SampleSize 1 {single_klarf.sample_size};\n")
+        f.write(f'DeviceID "{single_klarf.device_id}";\n')
+        f.write(
+            f'SetupID "{single_klarf.setup_id.name}" {single_klarf.setup_id.date};\n'
+        )
+        f.write(f'StepID "{single_klarf.step_id}";\n')
+        f.write(
+            f'SampleOrientationMarkType "{single_klarf.sample_orientation_mark_type}";\n'
+        )
+        f.write(
+            f'OrientationMarkLocation "{single_klarf.orientation_mark_location}";\n'
+        )
+        f.write(
+            f"DiePitch {single_klarf.die_pitch.x:0.10e} {single_klarf.die_pitch.y:0.10e};\n"
+        )
+        f.write(
+            f"DieOrigin {single_klarf.wafer.die_origin.x:0.10e} {single_klarf.wafer.die_origin.y:0.10e};\n"
+        )
+        f.write(f'WaferID "{single_klarf.wafer.id}";\n')
+        f.write(f"Slot {single_klarf.wafer.slot};\n")
+        f.write(
+            f"SampleCenterLocation {single_klarf.wafer.sample_center_location.x:0.10e} {single_klarf.wafer.sample_center_location.y:0.10e};\n"
+        )
+        f.write(f"SampleTestPlan {num_sample_test_plan}\n")
+        f.write("".join(sample_test_plan_rows))
+        for test in single_klarf.wafer.tests:
+            f.write(f"InspectionTest {test.id}\n")
+            f.write(f"AreaPerTest {test.area:0.10e}\n")
+        f.write(
+            f"DefectRecordSpec 14 DEFECTID XREL YREL XINDEX YINDEX XSIZE YSIZE DEFECTAREA DSIZE CLASSNUMBER TEST CLUSTERNUMBER ROUGHBINNUMBER FINEBINNUMBER IMAGECOUNT {attribute} ;\n"
+        )
+        f.write(f"DefectList\n")
+        f.write("".join(defect_rows))
+        f.write("EndOfFile;")
 
     return time.time() - tic
 
 
 def write_baby_klarf(
+    single_klarf: SingleKlarfContent,
     clustering_result: ClusteringResult,
     attribute: str,
-    output_filename: Path = None,
+    output_filename: Path,
 ) -> float:
-    output_filename = generate_output_file_name(
-        output_name=output_filename, clustering_result=clustering_result
-    )
 
     tic = time.time()
 
-    file_version = " ".join(str(clustering_result.file_version).split("."))
+    file_version = " ".join(str(single_klarf.file_version).split("."))
 
     defects = [
         create_baby_defect_row(
@@ -103,11 +122,11 @@ def write_baby_klarf(
 
     with open(output_filename, "w") as f:
         f.write(f"FileVersion {file_version};\n")
-        f.write(f"ResultTimestamp {clustering_result.result_timestamp};\n")
-        f.write(f'LotID "{clustering_result.lot_id}";\n')
-        f.write(f'DeviceID "{clustering_result.device_id}";\n')
-        f.write(f'StepID "{clustering_result.step_id}";\n')
-        f.write(f'WaferID "{clustering_result.wafer_id}";\n')
+        f.write(f"ResultTimestamp {single_klarf.result_timestamp};\n")
+        f.write(f'LotID "{single_klarf.lot_id}";\n')
+        f.write(f'DeviceID "{single_klarf.device_id}";\n')
+        f.write(f'StepID "{single_klarf.step_id}";\n')
+        f.write(f'WaferID "{single_klarf.wafer.id}";\n')
         f.write(f"DefectRecordSpec 2 DEFECTID {attribute} ;\n")
         f.write(f"DefectList\n")
         f.write("".join(defects))
@@ -116,7 +135,11 @@ def write_baby_klarf(
     return time.time() - tic
 
 
-def create_baby_defect_row(defect_id: int, bin: int, last_row: bool = False):
+def create_baby_defect_row(
+    defect_id: int,
+    bin: int,
+    last_row: bool = False,
+):
     row = f" {defect_id} {bin}"
 
     if last_row:
@@ -125,11 +148,24 @@ def create_baby_defect_row(defect_id: int, bin: int, last_row: bool = False):
     return f"{row}\n"
 
 
-def create_full_defect_row(original_row: str, bin: int, last_row: bool = False):
-    original_row_tmp = (
-        original_row.split("\n") if not last_row else original_row.split(";\n")
-    )
-    row = f"{original_row_tmp[0]} {bin}"
+def create_defect_row(
+    defect: Defect,
+    bin: int,
+    last_row: bool = False,
+):
+    row = f" {defect.id} {defect.x_rel:0.3f} {defect.y_rel:0.3f} {defect.x_index} {defect.y_index} {defect.x_size:0.3f} {defect.y_size:0.3f} {defect.area:0.3f} {defect.d_size:0.3f} {defect.class_number} {defect.test_id} {defect.cluster_number} {defect.roughbin} {defect.finebin} {defect.image_count} {bin}"
+
+    if last_row:
+        row = f"{row};"
+
+    return f"{row}\n"
+
+
+def create_sample_test_plan_row(
+    indexes: tuple[int, int],
+    last_row: bool = False,
+):
+    row = f" {indexes[0]} {indexes[1]}"
 
     if last_row:
         row = f"{row};"

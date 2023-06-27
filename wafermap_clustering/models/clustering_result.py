@@ -1,6 +1,7 @@
 # MODULES
 from dataclasses import dataclass, field
 from typing import List
+from pathlib import Path
 
 from wafermap_clustering.models.clustering_performance import ClusteringPerformance
 
@@ -19,6 +20,7 @@ class ClusteringResult:
     clusters: int
     clustered_defects: List[ClusteredDefect] = field(default=lambda: [])
     performance: ClusteringPerformance = None
+    output_filename: Path = field(default_factory=lambda: None)
 
     @property
     def number_of_defects(self):

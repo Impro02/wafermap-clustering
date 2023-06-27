@@ -67,6 +67,15 @@ class Clustering:
                 klarf_content=klarf_content, wafer_index=index
             )
 
+            output_filename = (
+                (
+                    output_directory
+                    / f"{single_klarf.lot_id}_{single_klarf.step_id}_{single_klarf.wafer.id}_{clustering_mode}.000"
+                )
+                if output_directory is not None
+                else None
+            )
+
             defect_ids = np.array([defect.id for defect in wafer.defects])
             defect_points = np.array(
                 [
@@ -111,27 +120,21 @@ class Clustering:
                 wafer_id=single_klarf.wafer.id,
                 clusters=clusters,
                 clustered_defects=clustered_defects,
+                output_filename=output_filename,
             )
 
             output_timestamp = None
-            output_filename = (
-                (
-                    output_directory
-                    / f"{single_klarf.lot_id}_{single_klarf.step_id}_{single_klarf.wafer.id}_{clustering_mode}.000"
-                )
-                if output_directory is not None
-                else None
-            )
             match klarf_format:
                 case KlarfFormat.BABY.value if output_directory is not None:
                     output_timestamp = klarf_lib.write_baby_klarf(
+                        single_klarf=single_klarf,
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
                         output_filename=output_filename,
                     )
                 case KlarfFormat.FULL.value if output_directory is not None:
                     output_timestamp = klarf_lib.write_full_klarf(
-                        raw_content=raw_content,
+                        single_klarf=single_klarf,
                         clustering_result=clustering_result,
                         attribute=self.config.attribute,
                         output_filename=output_filename,

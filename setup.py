@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.2.6"
+version = "0.2.7"
 
 setup(
     name="wafermap-clustering",
@@ -14,6 +14,8 @@ setup(
     install_requires=[
         "klarf-reader",
         "scikit-learn",
+        "setuptools",
+        "hdbscan",
     ],
     license="MIT",
     author="Maxime MARTIN",
