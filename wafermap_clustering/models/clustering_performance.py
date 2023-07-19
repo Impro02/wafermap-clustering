@@ -1,11 +1,11 @@
 # MODULES
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class ClusteringPerformance:
-    clustering_timestamp: float = field(default=lambda: None)
-    output_timestamp: float = field(default=lambda: None)
+    clustering_timestamp: float = None
+    output_timestamp: float = None
 
     def __repr__(self) -> str:
         returned_output_timestamp = (

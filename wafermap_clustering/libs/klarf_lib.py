@@ -1,7 +1,9 @@
 # MODULES
-import time
-from pathlib import Path
 import datetime
+import time
+import re
+from pathlib import Path
+from typing import List
 
 # KLARF_READER
 from klarf_reader.models.klarf_content import SingleKlarfContent, Defect
@@ -11,91 +13,63 @@ from ..models.clustering_result import ClusteringResult
 
 
 def write_full_klarf(
-    single_klarf: SingleKlarfContent,
-    clustering_result: ClusteringResult,
+    raw_klarf: List[str],
+    clustering_results: List[ClusteringResult],
     attribute: str,
     output_filename: Path,
 ) -> float:
 
+    if output_filename is None:
+        return
+
     tic = time.time()
 
-    file_version = " ".join(str(single_klarf.file_version).split("."))
-
-    defect_dict = {
-        defect.defect_id: defect.bin for defect in clustering_result.clustered_defects
-    }
-
-    defect_rows = [
-        create_defect_row(
-            defect=defect,
-            bin=defect_dict.get(defect.id),
-            last_row=index == clustering_result.number_of_defects - 1,
-        )
-        for index, defect in enumerate(single_klarf.wafer.defects)
-    ]
-
-    sample_test_plan = list(
-        zip(
-            single_klarf.sample_plan_test.x,
-            single_klarf.sample_plan_test.y,
-        )
-    )
-
-    num_sample_test_plan = len(sample_test_plan)
-
-    sample_test_plan_rows = [
-        create_sample_test_plan_row(
-            indexes=indexes,
-            last_row=index == num_sample_test_plan - 1,
-        )
-        for index, indexes in enumerate(sample_test_plan)
-    ]
-
+    next_row_has_coords = False
     with open(output_filename, "w") as f:
-        f.write(f"FileVersion {file_version};\n")
-        f.write(
-            f"FileTimestamp {datetime.datetime.now().strftime('%m-%d-%y %H:%M:%S')};\n"
-        )
-        f.write(
-            f'InspectionStationID "{single_klarf.inspection_station_id.mfg}" "{single_klarf.inspection_station_id.model}" "{single_klarf.inspection_station_id.id}";\n'
-        )
-        f.write(f"SampleType {single_klarf.sample_type};\n")
-        f.write(f"ResultTimestamp {single_klarf.result_timestamp};\n")
-        f.write(f'LotID "{single_klarf.lot_id}";\n')
-        f.write(f"SampleSize 1 {single_klarf.sample_size};\n")
-        f.write(f'DeviceID "{single_klarf.device_id}";\n')
-        f.write(
-            f'SetupID "{single_klarf.setup_id.name}" {single_klarf.setup_id.date};\n'
-        )
-        f.write(f'StepID "{single_klarf.step_id}";\n')
-        f.write(
-            f'SampleOrientationMarkType "{single_klarf.sample_orientation_mark_type}";\n'
-        )
-        f.write(
-            f'OrientationMarkLocation "{single_klarf.orientation_mark_location}";\n'
-        )
-        f.write(
-            f"DiePitch {single_klarf.die_pitch.x:0.10e} {single_klarf.die_pitch.y:0.10e};\n"
-        )
-        f.write(
-            f"DieOrigin {single_klarf.wafer.die_origin.x:0.10e} {single_klarf.wafer.die_origin.y:0.10e};\n"
-        )
-        f.write(f'WaferID "{single_klarf.wafer.id}";\n')
-        f.write(f"Slot {single_klarf.wafer.slot};\n")
-        f.write(
-            f"SampleCenterLocation {single_klarf.wafer.sample_center_location.x:0.10e} {single_klarf.wafer.sample_center_location.y:0.10e};\n"
-        )
-        f.write(f"SampleTestPlan {num_sample_test_plan}\n")
-        f.write("".join(sample_test_plan_rows))
-        for test in single_klarf.wafer.tests:
-            f.write(f"InspectionTest {test.id};\n")
-            f.write(f"AreaPerTest {test.area:0.10e};\n")
-        f.write(
-            f"DefectRecordSpec 16 DEFECTID XREL YREL XINDEX YINDEX XSIZE YSIZE DEFECTAREA DSIZE CLASSNUMBER TEST CLUSTERNUMBER ROUGHBINNUMBER FINEBINNUMBER IMAGECOUNT {attribute} ;\n"
-        )
-        f.write(f"DefectList\n")
-        f.write("".join(defect_rows))
-        f.write("EndOfFile;")
+        for row in raw_klarf:
+            if row.lstrip().lower().startswith("waferid"):
+                wafer_id = row.split('"')[1]
+                clustering_mapper = {
+                    defect.defect_id: defect.bin
+                    for item in clustering_results
+                    for defect in item.clustered_defects
+                    if item.wafer_id == wafer_id
+                }
+
+            if row.lstrip().lower().startswith("defectrecordspec"):
+                row_without_space = re.sub("\s+", " ", row).strip()
+                parameters = row_without_space.strip().split(" ")
+                tmp_record = int(parameters[1])
+                parameters[1] = str(tmp_record + 1)
+                parameters.insert(-1, attribute)
+                parameters.append("\n")
+                row = " ".join(parameters)
+
+            if row.lstrip().lower().startswith("defectlist") and not (
+                row.rstrip().endswith(";")
+            ):
+                next_row_has_coords = True
+
+            if next_row_has_coords:
+                if row.startswith(" "):
+                    defect_parameters = row.rstrip().split(" ")
+                    defect_parameters[-1] = defect_parameters[-1][:-1]
+
+                    defect_id = int(defect_parameters[1])
+
+                    defect_parameters.append(str(clustering_mapper.get(defect_id)))
+
+                    if row.rstrip().endswith(";"):
+                        defect_parameters.append(";")
+
+                    defect_parameters.append("\n")
+
+                    row = " ".join(defect_parameters)
+
+                if row.rstrip().endswith(";"):
+                    next_row_has_coords = False
+
+            f.write(row)
 
     return time.time() - tic
 
@@ -106,6 +80,9 @@ def write_baby_klarf(
     attribute: str,
     output_filename: Path,
 ) -> float:
+
+    if output_filename is None:
+        return
 
     tic = time.time()
 
