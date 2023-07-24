@@ -1,7 +1,7 @@
 # MODULES
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 from logging import Logger
 
 # NUMPY
@@ -14,7 +14,7 @@ from sklearn.cluster import DBSCAN
 from hdbscan import HDBSCAN
 
 # KLARF_READER
-from klarf_reader.klarf import Klarf
+from klarf_reader.klarf import Klarf, KlarfContent
 from klarf_reader.utils import klarf_convert
 
 # MODELS
@@ -38,17 +38,16 @@ class Clustering:
         self.config = config
         self.logger = logger
 
-    def apply(
+    def apply_from_content(
         self,
-        klarf_path: Path,
+        content: Tuple[KlarfContent, List[str]],
         output_directory: Path = None,
+        original_klarf_name: str = None,
+        original_klarf_extension: str = None,
         klarf_format=KlarfFormat.BABY.value,
         clustering_mode=ClusteringMode.DBSCAN.value,
-    ) -> List[ClusteringResult]:
-
-        klarf_content, raw_content = Klarf.load_from_file_with_raw_content(
-            filepath=klarf_path
-        )
+    ):
+        klarf_content, raw_content = content
 
         match clustering_mode:
             case ClusteringMode.DBSCAN.value:
@@ -131,9 +130,18 @@ class Clustering:
             results.append(clustering_result)
 
         if klarf_format == KlarfFormat.FULL.value and output_directory is not None:
+            if original_klarf_name is None:
+                raise ValueError(
+                    f"<original_klarf_name> cannot be None to create full klarf."
+                )
+            if original_klarf_extension is None:
+                raise ValueError(
+                    f"<original_klarf_extension> cannot be None to create full klarf."
+                )
+
             output_filename = (
                 output_directory
-                / f"{klarf_path.stem}_{clustering_mode}{klarf_path.suffix}"
+                / f"{original_klarf_name}_{clustering_mode}{original_klarf_extension}"
             )
 
             output_timestamp = klarf_lib.write_full_klarf(
@@ -159,3 +167,22 @@ class Clustering:
                 )
 
         return results
+
+    def apply_from_klarf_path(
+        self,
+        klarf_path: Path,
+        output_directory: str = None,
+        klarf_format=KlarfFormat.BABY.value,
+        clustering_mode=ClusteringMode.DBSCAN.value,
+    ) -> List[ClusteringResult]:
+
+        content = Klarf.load_from_file_with_raw_content(filepath=klarf_path)
+
+        return self.apply_from_content(
+            content=content,
+            output_directory=output_directory,
+            original_klarf_name=klarf_path.stem,
+            original_klarf_extension=klarf_path.suffix,
+            klarf_format=klarf_format,
+            clustering_mode=clustering_mode,
+        )
