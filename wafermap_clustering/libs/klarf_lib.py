@@ -105,8 +105,11 @@ def write_baby_klarf(
         f.write(f'StepID "{single_klarf.step_id}";\n')
         f.write(f'WaferID "{single_klarf.wafer.id}";\n')
         f.write(f"DefectRecordSpec 2 DEFECTID {attribute} ;\n")
-        f.write(f"DefectList\n")
-        f.write("".join(defects))
+        if len(defects) == 0:
+            f.write(f"DefectList;\n")
+        else:
+            f.write(f"DefectList\n")
+            f.write("".join(defects))
         f.write("EndOfFile;")
 
     return time.time() - tic

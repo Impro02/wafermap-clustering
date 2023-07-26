@@ -71,28 +71,33 @@ class Clustering:
                 klarf_content=klarf_content, wafer_index=index
             )
 
-            defect_ids = np.array([defect.id for defect in wafer.defects])
-            defect_points = np.array(
-                [
-                    (defect.point[0] / 1000, defect.point[1] / 1000)
-                    for defect in wafer.defects
-                ]
-            )
-
-            labels = clustering.fit_predict(defect_points)
-
-            clustering_values = np.column_stack((defect_ids, labels))
-            clusters = len(np.unique(labels, axis=0))
-
-            clustered_defects = [
-                ClusteredDefect(
-                    defect_id=defect_id,
-                    bin=cluster_label,
+            if len(wafer.defects) == 0:
+                clusters = 0
+                clustered_defects = []
+                clustering_timestamp = 0
+            else:
+                defect_ids = np.array([defect.id for defect in wafer.defects])
+                defect_points = np.array(
+                    [
+                        (defect.point[0] / 1000, defect.point[1] / 1000)
+                        for defect in wafer.defects
+                    ]
                 )
-                for defect_id, cluster_label in clustering_values
-            ]
 
-            clustering_timestamp = time.time() - tic
+                labels = clustering.fit_predict(defect_points)
+
+                clustering_values = np.column_stack((defect_ids, labels))
+                clusters = len(np.unique(labels, axis=0))
+
+                clustered_defects = [
+                    ClusteredDefect(
+                        defect_id=defect_id,
+                        bin=cluster_label,
+                    )
+                    for defect_id, cluster_label in clustering_values
+                ]
+
+                clustering_timestamp = time.time() - tic
 
             clustering_result = ClusteringResult(
                 file_version=single_klarf.file_version,
