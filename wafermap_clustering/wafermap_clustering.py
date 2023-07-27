@@ -181,7 +181,10 @@ class Clustering:
         clustering_mode=ClusteringMode.DBSCAN.value,
     ) -> List[ClusteringResult]:
 
-        content = Klarf.load_from_file_with_raw_content(filepath=klarf_path)
+        content = Klarf.load_from_file_with_raw_content(
+            filepath=klarf_path,
+            parse_summary=False,
+        )
 
         return self.apply_from_content(
             content=content,
