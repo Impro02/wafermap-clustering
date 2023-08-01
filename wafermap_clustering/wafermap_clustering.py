@@ -54,6 +54,8 @@ class Clustering:
                 clustering = DBSCAN(
                     eps=self.config.clustering.dbscan.eps,
                     min_samples=self.config.clustering.dbscan.min_samples,
+                    algorithm="ball_tree",
+                    metric="haversine",
                 )
             case ClusteringMode.HDBSCAN.value:
                 clustering = HDBSCAN(
