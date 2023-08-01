@@ -9,6 +9,8 @@ import numpy as np
 
 # SCIKIT_LEARN
 from sklearn.cluster import DBSCAN
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 # HDBSCAN
 from hdbscan import HDBSCAN
@@ -49,23 +51,7 @@ class Clustering:
     ):
         klarf_content, raw_content = content
 
-        match clustering_mode:
-            case ClusteringMode.DBSCAN.value:
-                clustering = DBSCAN(
-                    eps=self.config.clustering.dbscan.eps,
-                    min_samples=self.config.clustering.dbscan.min_samples,
-                    algorithm="ball_tree",
-                    metric="haversine",
-                )
-            case ClusteringMode.HDBSCAN.value:
-                clustering = HDBSCAN(
-                    min_samples=self.config.clustering.hdbscan.min_samples,
-                    min_cluster_size=self.config.clustering.hdbscan.min_cluster_size,
-                )
-            case _:
-                raise ValueError(f"{clustering_mode=} is not supported")
-
-        self.logger.info(f"Prepare to cluster {len(klarf_content.wafers)} wafers")
+        self.logger.info(f"Prepare to cluster {len(klarf_content.wafers)} wafer(s)")
 
         results: List[ClusteringResult] = []
         for index, wafer in enumerate(klarf_content.wafers):
@@ -77,6 +63,25 @@ class Clustering:
 
             lot = single_klarf.lot_id
             wafer_id = single_klarf.wafer.id
+            nbr_defects = len(single_klarf.wafer.defects)
+
+            match clustering_mode:
+                case ClusteringMode.DBSCAN.value:
+                    clustering = DBSCAN(
+                        eps=self.config.clustering.dbscan.eps
+                        if nbr_defects <= 30000
+                        else 0.5,
+                        min_samples=self.config.clustering.dbscan.min_samples,
+                        # algorithm="ball_tree",
+                        # metric="haversine",
+                    )
+                case ClusteringMode.HDBSCAN.value:
+                    clustering = HDBSCAN(
+                        min_samples=self.config.clustering.hdbscan.min_samples,
+                        min_cluster_size=self.config.clustering.hdbscan.min_cluster_size,
+                    )
+                case _:
+                    raise ValueError(f"{clustering_mode=} is not supported")
 
             self.logger.info(
                 f"Preparing to perform clustering for {lot=} and {wafer_id=} using {clustering_mode=}"
@@ -87,7 +92,7 @@ class Clustering:
                 clustered_defects = []
                 clustering_timestamp = 0
 
-                self.logger.info(f"{lot=} and {wafer_id=} do not have any defects")
+                self.logger.info(f"{lot=} and {wafer_id=} do not have any defect")
             else:
                 defect_ids = np.array([defect.id for defect in wafer.defects])
                 defect_points = np.array(
@@ -98,7 +103,7 @@ class Clustering:
                 )
 
                 self.logger.info(
-                    f"Starting clustering process for {lot=} and {wafer_id=} on {len(defect_points)} defects"
+                    f"Starting clustering process for {lot=} and {wafer_id=} on {nbr_defects} defect(s)"
                 )
 
                 labels = clustering.fit_predict(defect_points)
