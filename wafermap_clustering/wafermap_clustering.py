@@ -63,6 +63,8 @@ class Clustering:
             case _:
                 raise ValueError(f"{clustering_mode=} is not supported")
 
+        self.logger.info(f"Prepare to cluster {len(klarf_content.wafers)} wafers")
+
         results: List[ClusteringResult] = []
         for index, wafer in enumerate(klarf_content.wafers):
             tic = time.time()
@@ -71,10 +73,19 @@ class Clustering:
                 klarf_content=klarf_content, wafer_index=index
             )
 
+            lot = single_klarf.lot_id
+            wafer_id = single_klarf.wafer.id
+
+            self.logger.info(
+                f"Preparing to perform clustering for {lot=} and {wafer_id=} using {clustering_mode=}"
+            )
+
             if len(wafer.defects) == 0:
                 clusters = 0
                 clustered_defects = []
                 clustering_timestamp = 0
+
+                self.logger.info(f"{lot=} and {wafer_id=} do not have any defects")
             else:
                 defect_ids = np.array([defect.id for defect in wafer.defects])
                 defect_points = np.array(
@@ -83,6 +94,12 @@ class Clustering:
                         for defect in wafer.defects
                     ]
                 )
+
+                self.logger.info(
+                    f"Starting clustering process for {lot=} and {wafer_id=} on {len(defect_points)} defects"
+                )
+
+                self.logger.info(f"{lot=} and {wafer_id=} do not have any defects")
 
                 labels = clustering.fit_predict(defect_points)
 
@@ -111,6 +128,10 @@ class Clustering:
                 performance=ClusteringPerformance(
                     clustering_timestamp=round(clustering_timestamp, 3)
                 ),
+            )
+
+            self.logger.info(
+                f"Clustering complete. Found {clusters} clusters on {len(clustered_defects)} defects."
             )
 
             output_timestamp = None
