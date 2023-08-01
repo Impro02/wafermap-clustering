@@ -99,8 +99,6 @@ class Clustering:
                     f"Starting clustering process for {lot=} and {wafer_id=} on {len(defect_points)} defects"
                 )
 
-                self.logger.info(f"{lot=} and {wafer_id=} do not have any defects")
-
                 labels = clustering.fit_predict(defect_points)
 
                 clustering_values = np.column_stack((defect_ids, labels))
