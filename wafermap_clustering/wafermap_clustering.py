@@ -66,10 +66,13 @@ class Clustering:
 
             match clustering_mode:
                 case ClusteringMode.DBSCAN.value:
+                    eps = self.config.clustering.dbscan.eps
+                    if nbr_defects > 100000:
+                        eps = 0.01
+                    elif nbr_defects > 35000:
+                        eps = 0.5
                     clustering = DBSCAN(
-                        eps=self.config.clustering.dbscan.eps
-                        if nbr_defects <= 30000
-                        else 0.5,
+                        eps=eps if nbr_defects <= 30000 else 0.5,
                         min_samples=self.config.clustering.dbscan.min_samples,
                         # algorithm="ball_tree",
                         # metric="haversine",
