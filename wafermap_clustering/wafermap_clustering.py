@@ -35,13 +35,12 @@ class Clustering:
     def __init__(
         self,
         config: Config,
-        logger: Logger = None,
     ) -> None:
         self.config = config
-        self.logger = logger
 
     def apply_from_content(
         self,
+        logger: Logger,
         content: Tuple[KlarfContent, List[str]],
         output_directory: Path = None,
         original_klarf_name: str = None,
@@ -51,7 +50,7 @@ class Clustering:
     ):
         klarf_content, raw_content = content
 
-        self.logger.info(f"Prepare to cluster {len(klarf_content.wafers)} wafer(s)")
+        logger.info(f"Prepare to cluster {len(klarf_content.wafers)} wafer(s)")
 
         results: List[ClusteringResult] = []
         for index, wafer in enumerate(klarf_content.wafers):
@@ -83,7 +82,7 @@ class Clustering:
                 case _:
                     raise ValueError(f"{clustering_mode=} is not supported")
 
-            self.logger.info(
+            logger.info(
                 f"Preparing to perform clustering for {lot=} and {wafer_id=} using {clustering_mode=}"
             )
 
@@ -92,7 +91,7 @@ class Clustering:
                 clustered_defects = []
                 clustering_timestamp = 0
 
-                self.logger.info(f"{lot=} and {wafer_id=} do not have any defect")
+                logger.info(f"{lot=} and {wafer_id=} do not have any defect")
             else:
                 defect_ids = np.array([defect.id for defect in wafer.defects])
                 defect_points = np.array(
@@ -102,7 +101,7 @@ class Clustering:
                     ]
                 )
 
-                self.logger.info(
+                logger.info(
                     f"Starting clustering process for {lot=} and {wafer_id=} on {nbr_defects} defect(s)"
                 )
 
@@ -135,7 +134,7 @@ class Clustering:
                 ),
             )
 
-            self.logger.info(
+            logger.info(
                 f"Clustering complete. Found {clusters} clusters on {len(clustered_defects)} defects."
             )
 
@@ -188,19 +187,19 @@ class Clustering:
                     output_timestamp, 3
                 )
 
-        if self.logger is not None:
-            for clustering_result in results:
-                defects = len(clustering_result.clustered_defects)
-                clusters = clustering_result.clusters
+        for clustering_result in results:
+            defects = len(clustering_result.clustered_defects)
+            clusters = clustering_result.clusters
 
-                self.logger.info(
-                    msg=f"({repr(clustering_result)}) was sucessfully processed [{defects=}, {clusters=}] with ({repr(clustering_result.performance)}) "
-                )
+            logger.info(
+                msg=f"({repr(clustering_result)}) was sucessfully processed [{defects=}, {clusters=}] with ({repr(clustering_result.performance)}) "
+            )
 
         return results
 
     def apply_from_klarf_path(
         self,
+        logger: Logger,
         klarf_path: Path,
         output_directory: str = None,
         klarf_format=KlarfFormat.BABY.value,
@@ -213,6 +212,7 @@ class Clustering:
         )
 
         return self.apply_from_content(
+            logger=logger,
             content=content,
             output_directory=output_directory,
             original_klarf_name=klarf_path.stem,
