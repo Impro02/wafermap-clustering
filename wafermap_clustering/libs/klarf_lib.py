@@ -52,16 +52,17 @@ def write_full_klarf(
 
             if next_row_has_coords:
                 if row.startswith(" "):
-                    defect_parameters = row.rstrip().split(" ")
-                    defect_parameters[-1] = defect_parameters[-1][:-1]
+                    row_without_space = re.sub("[\s;]+", " ", row).strip()
+                    defect_parameters = row_without_space.rstrip().split(" ")
 
-                    defect_id = int(defect_parameters[1])
+                    defect_id = int(defect_parameters[0])
 
                     defect_parameters.append(str(clustering_mapper.get(defect_id)))
 
                     if row.rstrip().endswith(";"):
                         defect_parameters.append(";")
 
+                    defect_parameters.insert(0, " ")
                     defect_parameters.append("\n")
 
                     row = " ".join(defect_parameters)
