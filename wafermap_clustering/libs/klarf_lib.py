@@ -1,9 +1,8 @@
 # MODULES
-import datetime
 import time
 import re
 from pathlib import Path
-from typing import List
+from typing import Any, Generator, List
 
 # KLARF_READER
 from klarf_reader.models.klarf_content import SingleKlarfContent, Defect
@@ -13,7 +12,7 @@ from ..models.clustering_result import ClusteringResult
 
 
 def write_full_klarf(
-    raw_klarf: List[str],
+    raw_klarf: Generator[str, Any, None],
     clustering_results: List[ClusteringResult],
     attribute: str,
     output_filename: Path,
