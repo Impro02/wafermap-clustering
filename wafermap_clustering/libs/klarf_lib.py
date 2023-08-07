@@ -36,12 +36,18 @@ def write_full_klarf(
                 }
 
             if row.lstrip().lower().startswith("defectrecordspec"):
-                row_without_space = re.sub("\s+", " ", row).strip()
+                row_without_space = re.sub("[\s;]+", " ", row).strip()
                 parameters = row_without_space.strip().split(" ")
-                tmp_record = int(parameters[1])
-                parameters[1] = str(tmp_record + 1)
-                parameters.insert(-1, attribute)
-                parameters.append("\n")
+                tmp_record = int(parameters[1]) + 1
+                parameters[1] = str(tmp_record)
+                last_param = parameters[-1]
+                has_image_list = last_param.lower() == "imagelist"
+                if has_image_list:
+                    parameters.insert(-1, attribute)
+                else:
+                    parameters.append(attribute)
+                dyn_cluster_id_index = parameters.index(attribute)
+                parameters.append(";\n")
                 row = " ".join(parameters)
 
             if row.lstrip().lower().startswith("defectlist") and not (
@@ -56,7 +62,13 @@ def write_full_klarf(
 
                     defect_id = int(defect_parameters[0])
 
-                    defect_parameters.append(str(clustering_mapper.get(defect_id)))
+                    dyn_cluster_id = str(clustering_mapper.get(defect_id))
+                    if has_image_list:
+                        defect_parameters.insert(
+                            dyn_cluster_id_index - 2, dyn_cluster_id
+                        )
+                    else:
+                        defect_parameters.append(dyn_cluster_id)
 
                     if row.rstrip().endswith(";"):
                         defect_parameters.append(";")
