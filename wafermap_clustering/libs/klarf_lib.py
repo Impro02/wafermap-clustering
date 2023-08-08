@@ -23,17 +23,18 @@ def write_full_klarf(
 
     tic = time.time()
 
+    clustering_mapper = {
+        item.wafer_id: {
+            defect.defect_id: defect.bin for defect in item.clustered_defects
+        }
+        for item in clustering_results
+    }
+
     next_row_has_coords = False
     with open(output_filename, "w") as f:
         for row in raw_klarf:
             if row.lstrip().lower().startswith("waferid"):
                 wafer_id = row.split('"')[1]
-                clustering_mapper = {
-                    defect.defect_id: defect.bin
-                    for item in clustering_results
-                    for defect in item.clustered_defects
-                    if item.wafer_id == wafer_id
-                }
 
             if row.lstrip().lower().startswith("defectrecordspec"):
                 row_without_space = re.sub("[\s;]+", " ", row).strip()
@@ -62,7 +63,9 @@ def write_full_klarf(
 
                     defect_id = int(defect_parameters[0])
 
-                    dyn_cluster_id = str(clustering_mapper.get(defect_id))
+                    dyn_cluster_id = str(
+                        clustering_mapper.get(wafer_id, {}).get(defect_id)
+                    )
                     if has_image_list:
                         defect_parameters.insert(
                             dyn_cluster_id_index - 2, dyn_cluster_id

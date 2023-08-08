@@ -60,6 +60,9 @@ class Clustering:
 
             lot = single_klarf.lot_id
             wafer_id = single_klarf.wafer.id
+
+            item_repr = {"lot": lot, "wafer_id": wafer_id}
+
             np_defects = np.array(
                 [
                     (defect.id, (defect.point[0] / 1000, defect.point[1] / 1000))
@@ -75,7 +78,7 @@ class Clustering:
                 clustered_defects = []
                 clustering_timestamp = 0
 
-                logger.info(f"{lot=} and {wafer_id=} do not have any defect")
+                logger.info(f"{item_repr} does not have any defect")
             else:
                 match clustering_mode:
                     case ClusteringMode.DBSCAN.value:
@@ -99,7 +102,7 @@ class Clustering:
                         raise ValueError(f"{clustering_mode=} is not supported")
 
                 logger.info(
-                    f"Starting clustering process for {lot=} and {wafer_id=} on {nbr_defects} defect(s)"
+                    f"Starting clustering process for {item_repr} on {nbr_defects} defect(s)"
                 )
 
                 labels = clustering.fit_predict(np_defects["point"])
@@ -107,13 +110,13 @@ class Clustering:
                 clustering_values = np.column_stack((np_defects["id"], labels))
                 clusters = len(np.unique(labels, axis=0))
 
-                clustered_defects = [
+                clustered_defects = (
                     ClusteredDefect(
                         defect_id=defect_id,
                         bin=cluster_label,
                     )
                     for defect_id, cluster_label in clustering_values
-                ]
+                )
 
                 clustering_timestamp = time.time() - tic
 
@@ -124,15 +127,17 @@ class Clustering:
                 device_id=single_klarf.device_id,
                 step_id=single_klarf.step_id,
                 wafer_id=single_klarf.wafer.id,
+                inspection_tool=single_klarf.inspection_station_id.id,
                 clusters=clusters,
                 clustered_defects=clustered_defects,
+                number_of_defects=nbr_defects,
                 performance=ClusteringPerformance(
                     clustering_timestamp=round(clustering_timestamp, 3)
                 ),
             )
 
             logger.info(
-                f"Clustering complete. Found {clusters} clusters on {len(clustered_defects)} defects."
+                f"Clustering complete. Found {clusters} cluster(s) on {nbr_defects} defect(s)."
             )
 
             output_timestamp = None
@@ -185,7 +190,7 @@ class Clustering:
                 )
 
         for clustering_result in results:
-            defects = len(clustering_result.clustered_defects)
+            defects = clustering_result.number_of_defects
             clusters = clustering_result.clusters
 
             logger.info(
