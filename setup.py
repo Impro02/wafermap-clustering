@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.3.20"
+version = "0.3.21"
 
 setup(
     name="wafermap-clustering",
@@ -16,6 +16,7 @@ setup(
         "scikit-learn",
         "setuptools",
         "hdbscan",
+        "pydantic",
     ],
     license="MIT",
     author="Maxime MARTIN",
