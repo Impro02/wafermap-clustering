@@ -1,0 +1,9 @@
+name: clustering
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.4
+  - pip
+  - pip:
+    - -r file:requirements.txt
+  - hdbscan=0.8.29
