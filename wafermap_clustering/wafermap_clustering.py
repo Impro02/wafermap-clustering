@@ -8,10 +8,7 @@ from logging import Logger
 import numpy as np
 
 # SKLEARN
-from sklearn.cluster import DBSCAN
-
-# HDBSCAN
-from hdbscan import HDBSCAN
+from sklearn.cluster import HDBSCAN, DBSCAN
 
 # KLARF_READER
 from klarf_reader.klarf import Klarf, KlarfContent

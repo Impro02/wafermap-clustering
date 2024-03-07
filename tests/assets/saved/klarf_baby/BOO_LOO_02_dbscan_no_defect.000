@@ -1,0 +1,9 @@
+FileVersion 1 2;
+ResultTimestamp 01-01-20 00:00:00;
+LotID "BOO";
+DeviceID "FOO";
+StepID "LOO";
+WaferID "02";
+DefectRecordSpec 2 DEFECTID DYN_CLUSTER_ID ;
+DefectList;
+EndOfFile;

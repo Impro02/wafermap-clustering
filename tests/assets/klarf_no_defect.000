@@ -1,0 +1,27 @@
+FileVersion 1 2;
+FileTimestamp 01-01-20 00:00:00;
+InspectionStationID "NONE" "X" "Y";
+SampleType WAFER;
+ResultTimestamp 01-01-20 00:00:00;
+LotID "BOO";
+SampleSize 1 200;
+DeviceID "FOO";
+SetupID "FOO" 01-01-20 00:00:00;
+StepID "LOO";
+SampleOrientationMarkType NOTCH;
+OrientationMarkLocation DOWN;
+DiePitch 4.0000320000e+03 6.6000500000e+03;
+DieOrigin 0.0000000000e+00 0.0000000000e+00;
+WaferID "02";
+Slot 24;
+SampleCenterLocation 8.6080000000e+03 7.5740000000e+03;
+OrientationInstructions "";
+InspectionTest 1;
+AreaPerTest 2.2448000907e+10;
+DefectRecordSpec 13 DEFECTID XREL YREL XINDEX YINDEX XSIZE YSIZE DEFECTAREA DSIZE CLASSNUMBER TEST CLUSTERNUMBER IMAGECOUNT ;
+DefectList;
+SummarySpec 5
+  TESTNO    NDEFECT    DEFDENSITY    NDIE    NDEFDIE  ;
+SummaryList 
+  1    40    1.7820000648e-01    1038    15  ;
+EndOfFile;

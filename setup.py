@@ -15,7 +15,6 @@ setup(
         "klarf-reader",
         "scikit-learn",
         "setuptools",
-        "hdbscan",
         "pydantic",
     ],
     license="MIT",
