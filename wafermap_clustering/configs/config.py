@@ -129,7 +129,7 @@ class Config:
         self.project_name = self.raw_data.get("project_name")
         self.directories = DirectoryConfig(
             root=directories_config.get("root"),
-            home=directories_config.get("home"),
+            home=os.path.expanduser("~"),
             logs=directories_config.get("logs"),
             tmp=directories_config.get("tmp"),
         )
@@ -153,7 +153,7 @@ class Config:
             if isinstance(value, str):
                 return (
                     value.replace("{{root}}", config["directories"]["root"])
-                    .replace("{{home}}", config["directories"]["home"])
+                    .replace("{{home}}", os.path.expanduser("~"))
                     .replace("{{project_name}}", config["project_name"])
                     .replace("{{user}}", getpass.getuser())
                     .replace("{{project}}", os.path.abspath(os.getcwd()))

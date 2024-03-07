@@ -2,9 +2,8 @@
     "project_name": "wafermap-clustering",
     "directories": {
         "root": "/{{project_name}}",
-        "home": "/{{project_name}}",
-        "logs": "{{root}}/logs",
-        "tmp": "{{root}}/tmp"
+        "logs": "{{home}}/logs",
+        "tmp": "{{home}}/tmp"
     },
     "attribute": "DYN_CLUSTER_ID",
     "clustering": {
