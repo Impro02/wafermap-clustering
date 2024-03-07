@@ -1,0 +1,63 @@
+{
+    "project_name": "wafermap-clustering",
+    "directories": {
+        "root": "/{{project_name}}",
+        "home": "/{{project_name}}",
+        "logs": "{{root}}/logs",
+        "tmp": "{{root}}/tmp"
+    },
+    "attribute": "DYN_CLUSTER_ID",
+    "clustering": {
+        "dbscan": {
+            "epsilon_values": [
+                {
+                    "min_points": 0,
+                    "max_points": 15000,
+                    "epsilon": 4
+                },
+                {
+                    "min_points": 15000,
+                    "max_points": 35000,
+                    "epsilon": 1
+                },
+                {
+                    "min_points": 35000,
+                    "max_points": 75000,
+                    "epsilon": 0.1
+                },
+                {
+                    "min_points": 75000,
+                    "max_points": null,
+                    "epsilon": 0.01
+                }
+            ],
+            "min_samples": 3
+        },
+        "hdbscan": {
+            "min_samples": 3,
+            "min_cluster_size": 5,
+            "epsilon_values": [
+                {
+                    "min_points": 0,
+                    "max_points": 15000,
+                    "epsilon": 4
+                },
+                {
+                    "min_points": 15000,
+                    "max_points": 35000,
+                    "epsilon": 1
+                },
+                {
+                    "min_points": 35000,
+                    "max_points": 75000,
+                    "epsilon": 0.1
+                },
+                {
+                    "min_points": 75000,
+                    "max_points": null,
+                    "epsilon": 0.01
+                }
+            ]
+        }
+    }
+}
