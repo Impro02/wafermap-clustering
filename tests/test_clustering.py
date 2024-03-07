@@ -19,6 +19,8 @@ from wafermap_clustering.configs.config import (
 ASSETS_PATH: Path = Path(__file__).parent / "assets"
 ASSETS_OUTPUT_PATH: Path = ASSETS_PATH / "clustering" / "output"
 
+ASSETS_OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+
 
 def setup_logger(name: str, directory: Path):
     logger = logging.getLogger(name=name)
