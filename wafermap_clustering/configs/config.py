@@ -4,6 +4,17 @@ import os
 from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass, field
+from typing import Annotated, List, Optional
+import annotated_types
+from pydantic import (
+    BaseModel,
+    Field,
+    field_validator,
+    model_validator,
+    PositiveFloat,
+    PositiveInt,
+    NonNegativeInt,
+)
 
 
 class KlarfFormat(Enum):
@@ -16,26 +27,78 @@ class ClusteringMode(Enum):
     HDBSCAN = "hdbscan"
 
 
-@dataclass
-class DBSCANConfig:
+class DBSCANAlgorithm(Enum):
+    auto = "auto"
+    ball_tree = "ball_tree"
+    kd_tree = "kd_tree"
+    brute = "brute"
+
+
+class EpsilonValues(BaseModel):
+    min_points: NonNegativeInt
+    max_points: Optional[PositiveInt] = Field(default=None)
+    epsilon: PositiveFloat
+
+    @model_validator(mode="after")
+    def validate_range(self):
+        if self.max_points is not None and self.min_points > self.max_points:
+            raise ValueError("min_points should be less than or equal to max_points")
+
+        return self
+
+
+class _DBSCANBaseConfig(BaseModel):
+    epsilon_values: Annotated[List[EpsilonValues], annotated_types.Len(min_length=1)]
+
+    @field_validator("epsilon_values")
+    @classmethod
+    def validate_epsilon_values(cls, epsilon_values: List[EpsilonValues]):
+        last_item = epsilon_values[-1]
+
+        if last_item.max_points is not None:
+            raise ValueError("The last epsilon_values should not have max_points")
+
+        for index, epsilon_value in enumerate(epsilon_values):
+            if index == 0:
+                tmp_min_points = epsilon_value.min_points
+                tmp_max_points = epsilon_value.max_points
+
+            if epsilon_value.min_points < tmp_min_points:
+                raise ValueError("min_points should be in ascending order")
+
+            if (
+                epsilon_value.max_points is not None
+                and epsilon_value.max_points < tmp_max_points
+            ):
+                raise ValueError("max_points should be in ascending order")
+
+            if index > 0 and epsilon_value.min_points != tmp_max_points:
+                raise ValueError(
+                    "min_points should be equals than the previous max_points"
+                )
+
+            tmp_min_points = epsilon_value.min_points
+            tmp_max_points = epsilon_value.max_points
+
+        return epsilon_values
+
+
+class DBSCANConfig(_DBSCANBaseConfig):
+    algorithm: DBSCANAlgorithm = DBSCANAlgorithm.auto
     min_samples: int
-    eps: int
 
 
-@dataclass
-class HDBSCANConfig:
+class HDBSCANConfig(_DBSCANBaseConfig):
     min_samples: int
     min_cluster_size: int
 
 
-@dataclass
-class ClusteringConfig:
+class ClusteringConfig(BaseModel):
     dbscan: DBSCANConfig
     hdbscan: HDBSCANConfig
 
 
-@dataclass
-class DirectoryConfig:
+class DirectoryConfig(BaseModel):
     root: str
     home: str
     logs: str
@@ -44,7 +107,6 @@ class DirectoryConfig:
 
 @dataclass
 class Config:
-    platform: str
     conf_path: str
 
     project_name: str = field(init=False)
@@ -56,7 +118,6 @@ class Config:
         self.raw_data = self.__load_config(file_path=self.conf_path)
         self.raw_data = self.__replace_variables(self.raw_data)
 
-        platform_config = self.raw_data.get("platforms", {}).get(self.platform, {})
         directories_config = self.raw_data.get("directories", {})
         clustering_config = self.raw_data.get("clustering", {})
         dbscan_config = clustering_config.get("dbscan", {})
@@ -64,8 +125,8 @@ class Config:
 
         self.project_name = self.raw_data.get("project_name")
         self.directories = DirectoryConfig(
-            root=platform_config.get("root"),
-            home=platform_config.get("home"),
+            root=directories_config.get("root"),
+            home=directories_config.get("home"),
             logs=directories_config.get("logs"),
             tmp=directories_config.get("tmp"),
         )
@@ -82,17 +143,14 @@ class Config:
         return data
 
     def __replace_variables(self, config: dict):
-        platform = config.get("platforms", {}).get(self.platform)
-        if platform is None:
-            return None
 
         replaced_config: dict = json.loads(json.dumps(config))
 
         def replace_variable(value):
             if isinstance(value, str):
                 return (
-                    value.replace("{{root}}", platform["root"])
-                    .replace("{{home}}", platform["home"])
+                    value.replace("{{root}}", config["directories"]["root"])
+                    .replace("{{home}}", config["directories"]["home"])
                     .replace("{{project_name}}", config["project_name"])
                     .replace("{{user}}", os.getlogin())
                     .replace("{{project}}", os.path.abspath(os.getcwd()))

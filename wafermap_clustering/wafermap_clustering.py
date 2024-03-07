@@ -7,7 +7,7 @@ from logging import Logger
 # NUMPY
 import numpy as np
 
-# SCIKIT_LEARN
+# SKLEARN
 from sklearn.cluster import DBSCAN
 
 # HDBSCAN
@@ -36,6 +36,26 @@ class Clustering:
     ) -> None:
         self.config = config
 
+    def _find_eps(self, algorithm: ClusteringMode, nbr_defects: int) -> float:
+        if algorithm == ClusteringMode.DBSCAN:
+            epsilon_values = self.config.clustering.dbscan.epsilon_values
+        elif algorithm == ClusteringMode.HDBSCAN:
+            epsilon_values = self.config.clustering.hdbscan.epsilon_values
+        else:
+            raise ValueError(f"{algorithm=} is not supported")
+
+        for epsilon_value in epsilon_values:
+            lower_bound, upper_bound = (
+                epsilon_value.min_points,
+                epsilon_value.max_points,
+            )
+            if lower_bound <= nbr_defects and (
+                upper_bound is None or nbr_defects < upper_bound
+            ):
+                return epsilon_value.epsilon
+
+        raise ValueError(f"Could not find epsilon value for {nbr_defects=}")
+
     def apply_from_content(
         self,
         logger: Logger,
@@ -63,15 +83,13 @@ class Clustering:
 
             item_repr = {"lot": lot, "wafer_id": wafer_id}
 
-            np_defects = np.array(
-                [
-                    (defect.id, (defect.point[0] / 1000, defect.point[1] / 1000))
-                    for defect in single_klarf.wafer.defects
-                ],
-                dtype=[("id", "i"), ("point", "f", (2,))],
-            )
+            defects = {
+                defect.id: [point / 1000 for point in defect.point]
+                for defect in single_klarf.wafer.defects
+            }
 
-            nbr_defects = np_defects.size
+            defect_ids = np.array(list(defects.keys()))
+            nbr_defects = len(defects)
 
             if nbr_defects == 0:
                 clusters = 0
@@ -80,43 +98,48 @@ class Clustering:
 
                 logger.info(f"{item_repr} does not have any defect")
             else:
-                match clustering_mode:
-                    case ClusteringMode.DBSCAN.value:
-                        eps = self.config.clustering.dbscan.eps
-                        if nbr_defects > 100000:
-                            eps = 0.01
-                        elif nbr_defects > 35000:
-                            eps = 0.5
-                        clustering = DBSCAN(
-                            eps=eps if nbr_defects <= 30000 else 0.5,
-                            min_samples=self.config.clustering.dbscan.min_samples,
-                            # algorithm="ball_tree",
-                            # metric="haversine",
-                        )
-                    case ClusteringMode.HDBSCAN.value:
-                        clustering = HDBSCAN(
-                            min_samples=self.config.clustering.hdbscan.min_samples,
-                            min_cluster_size=self.config.clustering.hdbscan.min_cluster_size,
-                        )
-                    case _:
-                        raise ValueError(f"{clustering_mode=} is not supported")
-
                 logger.info(
                     f"Starting clustering process for {item_repr} on {nbr_defects} defect(s)"
                 )
 
-                labels = clustering.fit_predict(np_defects["point"])
+                np_defect_points = np.array(
+                    list(defects.values()),
+                )
 
-                clustering_values = np.column_stack((np_defects["id"], labels))
+                match clustering_mode:
+                    case ClusteringMode.DBSCAN.value:
+                        clustering = DBSCAN(
+                            eps=self._find_eps(
+                                algorithm=ClusteringMode.DBSCAN,
+                                nbr_defects=nbr_defects,
+                            ),
+                            min_samples=self.config.clustering.dbscan.min_samples,
+                            algorithm=self.config.clustering.dbscan.algorithm.value,
+                        )
+                    case ClusteringMode.HDBSCAN.value:
+                        clustering = HDBSCAN(
+                            min_cluster_size=self.config.clustering.hdbscan.min_cluster_size,
+                            min_samples=self.config.clustering.hdbscan.min_samples,
+                            cluster_selection_epsilon=self._find_eps(
+                                algorithm=ClusteringMode.HDBSCAN,
+                                nbr_defects=nbr_defects,
+                            ),
+                        )
+                    case _:
+                        raise ValueError(f"{clustering_mode=} is not supported")
+
+                labels = clustering.fit_predict(np_defect_points)
+
+                clustering_values = np.column_stack((defect_ids, labels))
                 clusters = len(np.unique(labels, axis=0))
 
-                clustered_defects = (
+                clustered_defects = [
                     ClusteredDefect(
                         defect_id=defect_id,
                         bin=cluster_label,
                     )
                     for defect_id, cluster_label in clustering_values
-                )
+                ]
 
                 clustering_timestamp = time.time() - tic
 
@@ -194,7 +217,7 @@ class Clustering:
             clusters = clustering_result.clusters
 
             logger.info(
-                msg=f"({repr(clustering_result)}) was sucessfully processed [{defects=}, {clusters=}] with ({repr(clustering_result.performance)}) "
+                msg=f"({repr(clustering_result)}) was successfully processed [{defects=}, {clusters=}] with ({repr(clustering_result.performance)}) "
             )
 
         return results
