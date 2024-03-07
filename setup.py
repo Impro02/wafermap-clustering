@@ -21,6 +21,8 @@ setup(
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
     description="A project to apply clustering on wafermaps",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     url="https://github.com/Impro02/wafermap-clustering",
     download_url="https://github.com/Impro02/wafermap-clustering/archive/refs/tags/%s.tar.gz"
     % version,
