@@ -1,4 +1,5 @@
 # MODULES
+import getpass
 import json
 import os
 from enum import Enum
@@ -6,6 +7,8 @@ from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Annotated, List, Optional
 import annotated_types
+
+# PYDANTIC
 from pydantic import (
     BaseModel,
     Field,
@@ -152,7 +155,7 @@ class Config:
                     value.replace("{{root}}", config["directories"]["root"])
                     .replace("{{home}}", config["directories"]["home"])
                     .replace("{{project_name}}", config["project_name"])
-                    .replace("{{user}}", os.getlogin())
+                    .replace("{{user}}", getpass.getuser())
                     .replace("{{project}}", os.path.abspath(os.getcwd()))
                 )
             return value
